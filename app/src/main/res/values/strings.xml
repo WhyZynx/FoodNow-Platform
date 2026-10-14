@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">FoodNow</string>
+    <string name="text_instant_food_delivery">Instant Food Delivery</string>
+    <string name="text_email">Email</string>
+    <string name="text_password">Password</string>
+    <string name="text_full_name">Full Name</string>
+    <string name="text_phone">Phone Number</string>
+
+    <string name="text_sign_in">Sign In</string>
+    <string name="text_sign_up">Sign Up</string>
+    <string name="text_forgot">Quên mật khẩu?</string>
+    <string name="text_sign_in_facebook">Facebook</string>
+    <string name="text_sign_in_google">Google</string>
+    <string name="text_sign_in_apple">Apple</string>
+    <string name="text_view_basket">View Basket</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="text_reset_password">Gửi mã xác nhận</string>
+    <string name="text_back_to_sign_in">Quay lại đăng nhập</string>
+    <string name="text_dont_have_account">Chưa có tài khoản? Đăng ký</string>
+    <string name="text_already_have_account">Đã có tài khoản? Đăng nhập</string>
+    <string name="text_update_profile">Update Profile</string>
+    <string name="text_change_password">Change Password</string>
+    <string name="text_logout">Đăng xuất</string>
+    <string name="text_address">Delivery Address</string>
+    <string name="text_or_sign_in_with">hoặc tiếp tục với</string>
+    <string name="text_forgot_password_title">Quên mật khẩu?</string>
+    <string name="text_forgot_password_desc">Nhập email, FoodNow sẽ gửi mã đặt lại mật khẩu cho bạn</string>
+    <string name="text_new_password">New Password</string>
+    <string name="text_default_user_name">Nguyễn Văn A</string>
+    <string name="text_personal_info">Personal Information</string>
+
+    <string name="text_welcome_back">Chào mừng trở lại!</string>
+    <string name="text_login_subtitle">Đăng nhập để đặt món yêu thích</string>
+    <string name="text_email_phone_hint">Email hoặc số điện thoại</string>
+    <string name="text_email_hint">Email của bạn</string>
+    <string name="text_password_hint">Mật khẩu</string>
+    <string name="text_create_account">Tạo tài khoản</string>
+    <string name="text_register_subtitle">Chỉ mất 1 phút thôi</string>
+    <string name="text_full_name_hint">Họ và tên</string>
+    <string name="text_phone_hint">Số điện thoại</string>
+
+    <string name="text_current_password">Current Password</string>
+    <string name="text_new_password_hint">New Password (min 6 chars)</string>
+    <string name="text_confirm_new_password">Confirm New Password</string>
+    <string name="text_not_logged_in">Not Signed In</string>
+    <string name="text_not_logged_in_sub">Press Sign Out to return to Sign In</string>
+    <string name="text_cancel">Cancel</string>
+</resources>
