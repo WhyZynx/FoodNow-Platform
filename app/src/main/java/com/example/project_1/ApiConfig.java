@@ -20,7 +20,7 @@ import retrofit2.http.Path;
 
 public class ApiConfig {
 
-    public static final String BASE_URL = "http://10.0.2.2:8000/";
+    public static final String BASE_URL = "http://192.168.28.158:8000/";
 
     private static Retrofit retrofit = null;
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);

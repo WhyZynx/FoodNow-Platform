@@ -4,25 +4,27 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp"
+    android:layout_marginVertical="10dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="6dp"
     app:cardBackgroundColor="@color/colorCardBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:padding="14dp"
+        android:gravity="center_vertical">
 
         <androidx.cardview.widget.CardView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp">
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#F5F5F5">
 
             <ImageView
                 android:id="@+id/ivImage"
@@ -35,7 +37,6 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:orientation="vertical"
             android:paddingStart="16dp">
@@ -53,15 +54,17 @@
                 android:id="@+id/tvAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
+                android:ellipsize="end"
+                android:maxLines="2"
                 android:text="Restaurant Address"
                 android:textColor="@color/colorTextSecondary"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -74,7 +77,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
+                    android:layout_marginStart="6dp"
                     android:text="Free Delivery"
                     android:textColor="@color/colorPrimary"
                     android:textSize="12sp"

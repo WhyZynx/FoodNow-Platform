@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodNow Admin - Quản lý đơn hàng</title>
+    <title>FoodNow Admin - Transaction</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -15,8 +15,7 @@
             <a href="/admin/dashboard">📊 Tổng quan</a>
             <a href="/admin/users">👥 Người dùng</a>
             <a href="/admin/restaurants">🏪 Nhà hàng</a>
-            <a href="/admin/foods">🍕 Món ăn</a>
-            <a href="/admin/orders" class="active">📦 Đơn hàng</a>
+            <a href="/admin/orders" class="active">📦 Transaction</a>
         </nav>
         <div class="user-info">
             <div>{{ admin_email }}</div>
@@ -26,17 +25,17 @@
 
     <div class="main-content">
         <div class="top-bar">
-            <h1>Quản lý đơn hàng</h1>
+            <h1>Quản lý Transaction</h1>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <h2>Danh sách đơn đặt hàng</h2>
+                <h2>Danh sách giao dịch (Transactions)</h2>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>ID Đơn</th>
+                        <th>ID Giao dịch</th>
                         <th>Khách hàng</th>
                         <th>Nhà hàng</th>
                         <th>Địa chỉ giao</th>
@@ -73,7 +72,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="9" style="text-align: center; color: var(--text-muted);">Chưa có đơn hàng nào trong hệ thống</td>
+                        <td colspan="9" style="text-align: center; color: var(--text-muted);">Chưa có giao dịch nào trong hệ thống</td>
                     </tr>
                     {% endfor %}
                 </tbody>

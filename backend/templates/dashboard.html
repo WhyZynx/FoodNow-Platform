@@ -15,8 +15,7 @@
             <a href="/admin/dashboard" class="active">📊 Tổng quan</a>
             <a href="/admin/users">👥 Người dùng</a>
             <a href="/admin/restaurants">🏪 Nhà hàng</a>
-            <a href="/admin/foods">🍕 Món ăn</a>
-            <a href="/admin/orders">📦 Đơn hàng</a>
+            <a href="/admin/orders">📦 Transaction</a>
         </nav>
         <div class="user-info">
             <div>{{ admin_email }}</div>
@@ -46,14 +45,7 @@
             </div>
             <div class="stat-card">
                 <div class="info">
-                    <h3>Món ăn</h3>
-                    <div class="number">{{ stats.foods_count }}</div>
-                </div>
-                <div class="icon">🍕</div>
-            </div>
-            <div class="stat-card">
-                <div class="info">
-                    <h3>Đơn hàng</h3>
+                    <h3>Giao dịch</h3>
                     <div class="number">{{ stats.orders_count }}</div>
                 </div>
                 <div class="icon">📦</div>
@@ -62,13 +54,13 @@
 
         <div class="card">
             <div class="card-header">
-                <h2>Đơn hàng gần đây</h2>
+                <h2>Giao dịch gần đây</h2>
                 <a href="/admin/orders" class="btn btn-secondary btn-sm">Xem tất cả</a>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>ID Đơn</th>
+                        <th>ID Giao dịch</th>
                         <th>Khách hàng</th>
                         <th>Nhà hàng</th>
                         <th>Địa chỉ giao</th>
@@ -90,7 +82,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted);">Chưa có đơn hàng nào</td>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted);">Chưa có giao dịch nào</td>
                     </tr>
                     {% endfor %}
                 </tbody>

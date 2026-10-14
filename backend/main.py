@@ -12,21 +12,42 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-DB_HOST = "localhost"
-DB_USER = "root"
-DB_PASSWORD = ""
-DB_NAME = "foodnow_db"
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(env_path):
+    with open(env_path, "r") as f:
+        for line in f:
+            if "=" in line and not line.strip().startswith("#"):
+                k, v = line.strip().split("=", 1)
+                os.environ[k.strip()] = v.strip()
+
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_NAME = os.getenv("DB_NAME", "foodnow_db")
 
 def get_db_connection(db_name: Optional[str] = DB_NAME):
-    return pymysql.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=db_name,
-        charset="utf8mb4",
-        autocommit=True,
-        cursorclass=pymysql.cursors.DictCursor
-    )
+    passwords = [DB_PASSWORD, "", "root", "123456", "password", "admin", "12345"]
+    passwords = list(dict.fromkeys(passwords))
+
+    last_err = None
+    for pwd in passwords:
+        try:
+            conn = pymysql.connect(
+                host=DB_HOST,
+                user=DB_USER,
+                password=pwd,
+                database=db_name,
+                charset="utf8mb4",
+                autocommit=True,
+                cursorclass=pymysql.cursors.DictCursor
+            )
+            return conn
+        except pymysql.err.OperationalError as e:
+            last_err = e
+            if e.args[0] != 1045:
+                raise e
+    print("\n[LỖI KẾT NỐI MYSQL]: Access Denied (1045). Vui lòng mở file backend/.env và cấu hình đúng DB_PASSWORD.\n")
+    raise last_err
 
 def format_dates(obj: Any) -> Any:
     if isinstance(obj, list):
@@ -46,13 +67,29 @@ def format_dates(obj: Any) -> Any:
     return obj
 
 def init_db():
-    conn = pymysql.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        charset="utf8mb4",
-        autocommit=True
-    )
+    passwords = [DB_PASSWORD, "", "root", "123456", "password", "admin", "12345"]
+    passwords = list(dict.fromkeys(passwords))
+
+    conn = None
+    last_err = None
+    for pwd in passwords:
+        try:
+            conn = pymysql.connect(
+                host=DB_HOST,
+                user=DB_USER,
+                password=pwd,
+                charset="utf8mb4",
+                autocommit=True
+            )
+            break
+        except pymysql.err.OperationalError as e:
+            last_err = e
+            if e.args[0] != 1045:
+                raise e
+    if not conn:
+        print("\n[LỖI KẾT NỐI MYSQL]: Access Denied (1045). Vui lòng mở file backend/.env và cấu hình đúng DB_PASSWORD.\n")
+        raise last_err
+
     with conn.cursor() as cursor:
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
     conn.close()
@@ -139,32 +176,68 @@ def init_db():
                     VALUES (%s, %s, %s, %s, %s, %s, 'active')
                 """, (full_name, email, hashed_pass, phone, address, role))
 
-        cursor.execute("SELECT COUNT(*) as cnt FROM restaurants")
-        res_cnt = cursor.fetchone()['cnt']
-        if res_cnt == 0:
-            cursor.execute("""
-                INSERT INTO restaurants (name, address, open_hours, logo, cover, status)
-                VALUES ('Cơm Tấm Sài Gòn 18', '18 Nguyễn Trãi, Q.5, TP.HCM', '07:00 - 21:00', '', '', 'active')
-            """)
-            r1_id = cursor.lastrowid
+        cursor.execute("DELETE FROM restaurants WHERE name IN ('Bánh Mì Phượng', 'Phở Sài Gòn', 'Cơm Tấm Sài Gòn 18', 'Trà Sữa & Ăn Vặt FoodNow')")
 
-            cursor.execute("""
-                INSERT INTO restaurants (name, address, open_hours, logo, cover, status)
-                VALUES ('Trà Sữa & Ăn Vặt FoodNow', '456 Lê Văn Sỹ, Q.3, TP.HCM', '08:00 - 22:30', '', '', 'active')
-            """)
-            r2_id = cursor.lastrowid
+        restaurants_data = [
+            ("Circle K", "123 Nguyen Hue St, District 1", "00:00 - 23:59", [
+                ("Classic Hot Dog", 25000),
+                ("Cheese Burger", 35000),
+                ("Mixed Noodles", 25000),
+                ("Soft Drink", 12000)
+            ]),
+            ("Highland Coffee", "456 Le Loi St, District 1", "07:00 - 22:00", [
+                ("Premium Milk Coffee", 39000),
+                ("Matcha Latte", 49000),
+                ("Strawberry Latte", 49000),
+                ("Lemon Mousse Cake", 35000),
+                ("Black Coffee", 29000)
+            ]),
+            ("MiniStop", "789 CMT8 St, District 3", "00:00 - 23:59", [
+                ("Osaka Takoyaki", 30000),
+                ("Spicy Tokbokki", 35000),
+                ("Shrimp Burger", 32000),
+                ("Special Burger", 40000)
+            ]),
+            ("7 Eleven", "101 Ton Duc Thang St, District 1", "00:00 - 23:59", [
+                ("Club Sandwich", 28000),
+                ("Spaghetti Meatball", 45000),
+                ("Beef Tacos", 35000),
+                ("Saigon Banh Mi", 30000)
+            ]),
+            ("VinMart", "202 Pham Ngu Lao St, District 1", "08:00 - 22:00", [
+                ("Grilled Sweet Potato", 20000),
+                ("Fresh Egg Tart", 15000),
+                ("Pre-cut Tropical Fruit", 25000),
+                ("Healthy Bowl", 45000)
+            ])
+        ]
 
-            cursor.execute("""
-                INSERT INTO foods (restaurant_id, name, price, image, status)
-                VALUES
-                (%s, 'Cơm tấm sườn bì chả', 45000, '', 'available'),
-                (%s, 'Cơm tấm sườn nướng', 40000, '', 'available'),
-                (%s, 'Trà sữa trân châu đường đen', 35000, '', 'available'),
-                (%s, 'Bánh mì que Hải Phòng', 20000, '', 'available')
-            """, (r1_id, r1_id, r2_id, r2_id))
+        for r_name, r_addr, r_hours, foods in restaurants_data:
+            cursor.execute("SELECT id FROM restaurants WHERE name = %s", (r_name,))
+            res_row = cursor.fetchone()
+            if not res_row:
+                cursor.execute("""
+                    INSERT INTO restaurants (name, address, open_hours, logo, cover, status)
+                    VALUES (%s, %s, %s, '', '', 'active')
+                """, (r_name, r_addr, r_hours))
+                r_id = cursor.lastrowid
+
+                for f_name, f_price in foods:
+                    cursor.execute("""
+                        INSERT INTO foods (restaurant_id, name, price, image, status)
+                        VALUES (%s, %s, %s, '', 'available')
+                    """, (r_id, f_name, f_price))
+            else:
+                r_id = res_row['id']
+                for f_name, f_price in foods:
+                    cursor.execute("SELECT id FROM foods WHERE restaurant_id = %s AND name = %s", (r_id, f_name))
+                    if not cursor.fetchone():
+                        cursor.execute("""
+                            INSERT INTO foods (restaurant_id, name, price, image, status)
+                            VALUES (%s, %s, %s, '', 'available')
+                        """, (r_id, f_name, f_price))
 
     db.close()
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -427,13 +500,7 @@ def get_order_detail(order_id: int):
 def get_customer_orders(customer_id: int):
     db = get_db_connection()
     with db.cursor() as cursor:
-        cursor.execute("""
-            SELECT o.*, r.name as restaurant_name
-            FROM orders o
-            JOIN restaurants r ON o.restaurant_id = r.id
-            WHERE o.customer_id = %s
-            ORDER BY o.id DESC
-        """, (customer_id,))
+        cursor.execute("SELECT o.*, r.name as restaurant_name FROM orders o JOIN restaurants r ON o.restaurant_id = r.id WHERE o.customer_id = %s ORDER BY o.id DESC", (customer_id,))
         orders = cursor.fetchall()
     db.close()
     return {"status": "success", "orders": format_dates(orders)}
@@ -604,87 +671,6 @@ def admin_delete_restaurant(restaurant_id: int, admin=Depends(get_current_admin)
     db.close()
 
     return RedirectResponse(url="/admin/restaurants", status_code=status.HTTP_303_SEE_OTHER)
-
-@app.get("/admin/foods", response_class=HTMLResponse)
-def admin_foods_page(request: Request, admin=Depends(get_current_admin)):
-    if not admin:
-        return RedirectResponse(url="/admin/login")
-
-    db = get_db_connection()
-    with db.cursor() as cursor:
-        cursor.execute("""
-            SELECT f.*, r.name as restaurant_name
-            FROM foods f
-            JOIN restaurants r ON f.restaurant_id = r.id
-            ORDER BY f.id DESC
-        """)
-        foods = cursor.fetchall()
-
-        cursor.execute("SELECT id, name FROM restaurants WHERE status = 'active'")
-        restaurants = cursor.fetchall()
-
-    db.close()
-
-    return templates.TemplateResponse(request=request, name="foods.html", context={
-        "admin_email": admin['email'],
-        "foods": format_dates(foods),
-        "restaurants": format_dates(restaurants)
-    })
-
-@app.post("/admin/foods")
-def admin_create_food(
-    restaurant_id: int = Form(...),
-    name: str = Form(...),
-    price: float = Form(...),
-    status: str = Form("available"),
-    admin=Depends(get_current_admin)
-):
-    if not admin:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    db = get_db_connection()
-    with db.cursor() as cursor:
-        cursor.execute("""
-            INSERT INTO foods (restaurant_id, name, price, image, status)
-            VALUES (%s, %s, %s, '', %s)
-        """, (restaurant_id, name, price, status))
-    db.close()
-
-    return RedirectResponse(url="/admin/foods", status_code=status.HTTP_303_SEE_OTHER)
-
-@app.post("/admin/foods/{food_id}/edit")
-def admin_edit_food(
-    food_id: int,
-    restaurant_id: int = Form(...),
-    name: str = Form(...),
-    price: float = Form(...),
-    status: str = Form("available"),
-    admin=Depends(get_current_admin)
-):
-    if not admin:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    db = get_db_connection()
-    with db.cursor() as cursor:
-        cursor.execute("""
-            UPDATE foods SET restaurant_id = %s, name = %s, price = %s, status = %s
-            WHERE id = %s
-        """, (restaurant_id, name, price, status, food_id))
-    db.close()
-
-    return RedirectResponse(url="/admin/foods", status_code=status.HTTP_303_SEE_OTHER)
-
-@app.post("/admin/foods/{food_id}/delete")
-def admin_delete_food(food_id: int, admin=Depends(get_current_admin)):
-    if not admin:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    db = get_db_connection()
-    with db.cursor() as cursor:
-        cursor.execute("DELETE FROM foods WHERE id = %s", (food_id,))
-    db.close()
-
-    return RedirectResponse(url="/admin/foods", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/admin/orders", response_class=HTMLResponse)
 def admin_orders_page(request: Request, admin=Depends(get_current_admin)):
