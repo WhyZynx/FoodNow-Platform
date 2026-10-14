@@ -84,28 +84,21 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
             return;
         }
 
-        if (ApiConfig.checkUserEmailExists(email)) {
-            Toast.makeText(this, "This email is already registered!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        boolean isSuccess = ApiConfig.registerUser(fullName, email, password, phone, "");
-
-        if (isSuccess) {
-            User newUser = ApiConfig.getUserByEmail(email);
-            if (newUser != null) {
+        ApiConfig.registerUserApi(fullName, email, password, phone, "", new ApiConfig.ApiCallback<User>() {
+            @Override
+            public void onSuccess(User newUser) {
                 userSession.createSession(newUser);
-            } else {
-                userSession.createSession(new User(fullName, email, password, phone, ""));
+                Toast.makeText(SignUpActivity.this, "Đăng ký tài khoản thành công!", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
             }
 
-            Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        } else {
-            Toast.makeText(this, "Registration failed, please try again!", Toast.LENGTH_SHORT).show();
-        }
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(SignUpActivity.this, "Đăng ký thất bại: Email đã tồn tại!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

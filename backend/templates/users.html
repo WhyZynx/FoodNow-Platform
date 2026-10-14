@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodNow Admin - Quản lý người dùng</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <span>🍔</span> FoodNow Admin
+        </div>
+        <nav>
+            <a href="/admin/dashboard">📊 Tổng quan</a>
+            <a href="/admin/users" class="active">👥 Người dùng</a>
+            <a href="/admin/restaurants">🏪 Nhà hàng</a>
+            <a href="/admin/foods">🍕 Món ăn</a>
+            <a href="/admin/orders">📦 Đơn hàng</a>
+        </nav>
+        <div class="user-info">
+            <div>{{ admin_email }}</div>
+            <a href="/admin/logout">🚪 Đăng xuất</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h1>Quản lý người dùng</h1>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Danh sách tài khoản</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>Số điện thoại</th>
+                        <th>Địa chỉ</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td><strong>{{ user.full_name }}</strong></td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone or '-' }}</td>
+                        <td>{{ user.address or '-' }}</td>
+                        <td><span class="badge badge-{{ user.role }}">{{ user.role }}</span></td>
+                        <td><span class="badge badge-{{ user.status }}">{{ user.status }}</span></td>
+                        <td>
+                            {% if user.role != 'admin' %}
+                            <form action="/admin/users/{{ user.id }}/status" method="POST" style="display:inline;">
+                                {% if user.status == 'active' %}
+                                <input type="hidden" name="status" value="inactive">
+                                <button type="submit" class="btn btn-danger btn-sm">🔒 Khóa</button>
+                                {% else %}
+                                <input type="hidden" name="status" value="active">
+                                <button type="submit" class="btn btn-primary btn-sm">🔓 Mở khóa</button>
+                                {% endif %}
+                            </form>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 12px;">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

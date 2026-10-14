@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodNow Admin - Quản lý nhà hàng</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <span>🍔</span> FoodNow Admin
+        </div>
+        <nav>
+            <a href="/admin/dashboard">📊 Tổng quan</a>
+            <a href="/admin/users">👥 Người dùng</a>
+            <a href="/admin/restaurants" class="active">🏪 Nhà hàng</a>
+            <a href="/admin/foods">🍕 Món ăn</a>
+            <a href="/admin/orders">📦 Đơn hàng</a>
+        </nav>
+        <div class="user-info">
+            <div>{{ admin_email }}</div>
+            <a href="/admin/logout">🚪 Đăng xuất</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h1>Quản lý nhà hàng</h1>
+            <button class="btn btn-primary" onclick="openModal('addModal')">➕ Thêm nhà hàng</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Danh sách nhà hàng</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên nhà hàng</th>
+                        <th>Địa chỉ</th>
+                        <th>Giờ mở cửa</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in restaurants %}
+                    <tr>
+                        <td>{{ res.id }}</td>
+                        <td><strong>{{ res.name }}</strong></td>
+                        <td>{{ res.address }}</td>
+                        <td>{{ res.open_hours }}</td>
+                        <td><span class="badge badge-{{ res.status }}">{{ res.status }}</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" onclick='editRestaurant({{ res | tojson }})'>✏️ Sửa</button>
+                            <form action="/admin/restaurants/{{ res.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhà hàng này?');">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Thêm nhà hàng mới</h3>
+                <button class="close-btn" onclick="closeModal('addModal')">&times;</button>
+            </div>
+            <form action="/admin/restaurants" method="POST">
+                <div class="form-group">
+                    <label>Tên nhà hàng</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ</label>
+                    <input type="text" name="address" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Giờ mở cửa</label>
+                    <input type="text" name="open_hours" class="form-control" placeholder="07:00 - 22:00" required>
+                </div>
+                <div class="form-group">
+                    <label>Trạng thái</label>
+                    <select name="status" class="form-control">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Lưu nhà hàng</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cập nhật nhà hàng</h3>
+                <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <form id="editForm" method="POST">
+                <div class="form-group">
+                    <label>Tên nhà hàng</label>
+                    <input type="text" id="edit_name" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ</label>
+                    <input type="text" id="edit_address" name="address" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Giờ mở cửa</label>
+                    <input type="text" id="edit_open_hours" name="open_hours" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Trạng thái</label>
+                    <select id="edit_status" name="status" class="form-control">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Cập nhật</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        function editRestaurant(res) {
+            document.getElementById('editForm').action = '/admin/restaurants/' + res.id + '/edit';
+            document.getElementById('edit_name').value = res.name;
+            document.getElementById('edit_address').value = res.address;
+            document.getElementById('edit_open_hours').value = res.open_hours;
+            document.getElementById('edit_status').value = res.status;
+            openModal('editModal');
+        }
+    </script>
+</body>
+</html>

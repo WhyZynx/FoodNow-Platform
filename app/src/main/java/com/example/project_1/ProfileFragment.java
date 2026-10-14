@@ -23,6 +23,7 @@ public class ProfileFragment extends Fragment {
 
     private UserSession userSession;
     private String currentEmail = "";
+    private int currentUserId = 0;
 
     @Nullable
     @Override
@@ -68,23 +69,22 @@ public class ProfileFragment extends Fragment {
 
         User sessionUser = userSession.getUserDetails();
         if (sessionUser != null) {
+            currentUserId = sessionUser.getId();
             currentEmail = sessionUser.getEmail();
-            User dbUser = ApiConfig.getUserByEmail(currentEmail);
-            User user = dbUser != null ? dbUser : sessionUser;
 
-            String displayName = !TextUtils.isEmpty(user.getFullName()) ? user.getFullName() : getString(R.string.text_default_user_name);
+            String displayName = !TextUtils.isEmpty(sessionUser.getFullName()) ? sessionUser.getFullName() : getString(R.string.text_default_user_name);
             tvHeaderName.setText(displayName);
-            tvHeaderEmail.setText(user.getEmail());
+            tvHeaderEmail.setText(sessionUser.getEmail());
 
-            etFullName.setText(user.getFullName());
-            etEmail.setText(user.getEmail());
-            etPhone.setText(user.getPhone());
-            etAddress.setText(user.getAddress());
+            etFullName.setText(sessionUser.getFullName());
+            etEmail.setText(sessionUser.getEmail());
+            etPhone.setText(sessionUser.getPhone());
+            etAddress.setText(sessionUser.getAddress());
         }
     }
 
     private void handleUpdateProfile() {
-        if (TextUtils.isEmpty(currentEmail)) {
+        if (currentUserId == 0) {
             Toast.makeText(getContext(), "Please sign in to update profile!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -93,18 +93,23 @@ public class ProfileFragment extends Fragment {
         String phone = etPhone.getText().toString().trim();
         String address = etAddress.getText().toString().trim();
 
-        boolean updated = ApiConfig.updateUserProfile(currentEmail, fullName, phone, address);
-        if (updated) {
-            userSession.updateSessionProfile(fullName, phone, address);
-            tvHeaderName.setText(!TextUtils.isEmpty(fullName) ? fullName : getString(R.string.text_default_user_name));
-            Toast.makeText(getContext(), "Profile updated successfully!", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getContext(), "Update failed, please try again!", Toast.LENGTH_SHORT).show();
-        }
+        ApiConfig.updateProfileApi(currentUserId, fullName, phone, address, new ApiConfig.ApiCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+                userSession.updateSessionProfile(fullName, phone, address);
+                tvHeaderName.setText(!TextUtils.isEmpty(fullName) ? fullName : getString(R.string.text_default_user_name));
+                Toast.makeText(getContext(), "Cập nhật hồ sơ thành công!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(getContext(), "Cập nhật thất bại, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void showChangePasswordDialog() {
-        if (TextUtils.isEmpty(currentEmail)) {
+        if (currentUserId == 0) {
             Toast.makeText(getContext(), "Please sign in!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -134,11 +139,6 @@ public class ProfileFragment extends Fragment {
                 return;
             }
 
-            if (!ApiConfig.authenticateUser(currentEmail, currentPass)) {
-                etCurrentPass.setError("Incorrect current password");
-                return;
-            }
-
             if (TextUtils.isEmpty(newPass) || newPass.length() < 6) {
                 etNewPass.setError("New password must be at least 6 characters");
                 return;
@@ -149,13 +149,18 @@ public class ProfileFragment extends Fragment {
                 return;
             }
 
-            boolean success = ApiConfig.updatePassword(currentEmail, newPass);
-            if (success) {
-                Toast.makeText(getContext(), "Password changed successfully!", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
-            } else {
-                Toast.makeText(getContext(), "Failed to update password!", Toast.LENGTH_SHORT).show();
-            }
+            ApiConfig.changePasswordApi(currentUserId, currentPass, newPass, new ApiConfig.ApiCallback<Boolean>() {
+                @Override
+                public void onSuccess(Boolean result) {
+                    Toast.makeText(getContext(), "Đổi mật khẩu thành công!", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    Toast.makeText(getContext(), "Mật khẩu hiện tại không chính xác!", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
     }
 

@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class RestaurantFragment extends Fragment implements RestaurantAdapter.OnRestaurantItemClickListener {
 
@@ -34,58 +35,66 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.On
         );
 
         rvRestaurant = view.findViewById(R.id.rvRestaurant);
-        initData();
+        restaurantList = new ArrayList<>();
         adapter = new RestaurantAdapter(restaurantList, this);
         rvRestaurant.setLayoutManager(new LinearLayoutManager(getContext()));
         rvRestaurant.setAdapter(adapter);
 
+        loadRestaurantsFromApi();
+
         return view;
     }
 
-    private void initData() {
-        restaurantList = new ArrayList<>();
+    private void loadRestaurantsFromApi() {
+        ApiConfig.getRestaurantsApi(new ApiConfig.ApiCallback<List<ApiConfig.RestaurantModel>>() {
+            @Override
+            public void onSuccess(List<ApiConfig.RestaurantModel> models) {
+                restaurantList.clear();
+                for (ApiConfig.RestaurantModel model : models) {
+                    int logoRes = R.drawable.ic_circlek;
+                    if (model.name.toLowerCase().contains("highland")) {
+                        logoRes = R.drawable.ic_highland;
+                    } else if (model.name.toLowerCase().contains("ministop")) {
+                        logoRes = R.drawable.ic_ministop;
+                    } else if (model.name.toLowerCase().contains("7") || model.name.toLowerCase().contains("eleven")) {
+                        logoRes = R.drawable.ic_seveneleven;
+                    } else if (model.name.toLowerCase().contains("vin")) {
+                        logoRes = R.drawable.ic_vinmart;
+                    }
 
-        Restaurant circleK = new Restaurant("Circle K", R.drawable.ic_circlek, R.drawable.cover_menu_1, "123 Nguyen Hue St, District 1", "00:00 - 23:59");
-        ArrayList<Food> menuCircleK = new ArrayList<>();
-        menuCircleK.add(new Food("Classic Hot Dog", R.drawable.hotdog, 25000));
-        menuCircleK.add(new Food("Cheese Burger", R.drawable.cheese_burger, 35000));
-        menuCircleK.add(new Food("Mixed Noodles", R.drawable.mixed_noodle, 25000));
-        menuCircleK.add(new Food("Soft Drink", R.drawable.ic_milk_tea, 12000));
-        circleK.setMenu(menuCircleK);
-        restaurantList.add(circleK);
+                    Restaurant r = new Restaurant(model.name, logoRes, R.drawable.cover_menu_1, model.address, model.open_hours);
+                    
+                    ApiConfig.getFoodsApi(model.id, new ApiConfig.ApiCallback<List<ApiConfig.FoodModel>>() {
+                        @Override
+                        public void onSuccess(List<ApiConfig.FoodModel> foodModels) {
+                            ArrayList<Food> menu = new ArrayList<>();
+                            for (ApiConfig.FoodModel fm : foodModels) {
+                                int img = R.drawable.dish;
+                                if (fm.name.toLowerCase().contains("cơm")) img = R.drawable.bowl;
+                                else if (fm.name.toLowerCase().contains("trà")) img = R.drawable.boba;
+                                else if (fm.name.toLowerCase().contains("bánh")) img = R.drawable.sandwich;
+                                else if (fm.name.toLowerCase().contains("coffee")) img = R.drawable.milk_coffee;
+                                
+                                menu.add(new Food(fm.name, img, (int) fm.price));
+                            }
+                            r.setMenu(menu);
+                            adapter.notifyDataSetChanged();
+                        }
 
-        Restaurant highland = new Restaurant("Highland Coffee", R.drawable.ic_highland, R.drawable.cover_menu_1, "456 Le Loi St, District 1", "07:00 - 22:00");
-        ArrayList<Food> menuHighland = new ArrayList<>();
-        menuHighland.add(new Food("Premium Milk Coffee", R.drawable.milk_coffee, 39000));
-        menuHighland.add(new Food("Matcha Latte", R.drawable.matcha_latte, 49000));
-        menuHighland.add(new Food("Strawberry Latte", R.drawable.strawberry_latte, 49000));
-        menuHighland.add(new Food("Lemon Mousse Cake", R.drawable.lemon_mousse, 35000));
-        highland.setMenu(menuHighland);
-        restaurantList.add(highland);
+                        @Override
+                        public void onError(String errorMessage) {
+                        }
+                    });
 
-        Restaurant miniStop = new Restaurant("MiniStop", R.drawable.ic_ministop, R.drawable.cover_menu_1, "789 CMT8 St, District 3", "00:00 - 23:59");
-        ArrayList<Food> menuMiniStop = new ArrayList<>();
-        menuMiniStop.add(new Food("Osaka Takoyaki", R.drawable.takoyaki, 30000));
-        menuMiniStop.add(new Food("Spicy Tokbokki", R.drawable.tokbokki, 35000));
-        menuMiniStop.add(new Food("Shrimp Burger", R.drawable.shrimp_burger, 32000));
-        miniStop.setMenu(menuMiniStop);
-        restaurantList.add(miniStop);
+                    restaurantList.add(r);
+                }
+                adapter.notifyDataSetChanged();
+            }
 
-        Restaurant sevenEleven = new Restaurant("7 Eleven", R.drawable.ic_seveneleven, R.drawable.cover_menu_1, "101 Ton Duc Thang St, District 1", "00:00 - 23:59");
-        ArrayList<Food> menuSeven = new ArrayList<>();
-        menuSeven.add(new Food("Club Sandwich", R.drawable.sandwich, 28000));
-        menuSeven.add(new Food("Spaghetti Meatball", R.drawable.spaghetti, 45000));
-        menuSeven.add(new Food("Beef Tacos", R.drawable.tacos, 35000));
-        sevenEleven.setMenu(menuSeven);
-        restaurantList.add(sevenEleven);
-
-        Restaurant vinMart = new Restaurant("VinMart", R.drawable.ic_vinmart, R.drawable.cover_menu_1, "202 Pham Ngu Lao St, District 1", "08:00 - 22:00");
-        ArrayList<Food> menuVin = new ArrayList<>();
-        menuVin.add(new Food("Grilled Sweet Potato", R.drawable.sweet_potato, 20000));
-        menuVin.add(new Food("Fresh Egg Tart", R.drawable.tart, 15000));
-        menuVin.add(new Food("Pre-cut Tropical Fruit", R.drawable.tropical_fruit, 25000));
-        vinMart.setMenu(menuVin);
-        restaurantList.add(vinMart);
+            @Override
+            public void onError(String errorMessage) {
+            }
+        });
     }
 
     @Override

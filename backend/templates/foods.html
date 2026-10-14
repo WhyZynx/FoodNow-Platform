@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodNow Admin - Quản lý món ăn</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <span>🍔</span> FoodNow Admin
+        </div>
+        <nav>
+            <a href="/admin/dashboard">📊 Tổng quan</a>
+            <a href="/admin/users">👥 Người dùng</a>
+            <a href="/admin/restaurants">🏪 Nhà hàng</a>
+            <a href="/admin/foods" class="active">🍕 Món ăn</a>
+            <a href="/admin/orders">📦 Đơn hàng</a>
+        </nav>
+        <div class="user-info">
+            <div>{{ admin_email }}</div>
+            <a href="/admin/logout">🚪 Đăng xuất</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h1>Quản lý món ăn</h1>
+            <button class="btn btn-primary" onclick="openModal('addModal')">➕ Thêm món ăn</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Danh sách món ăn</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên món ăn</th>
+                        <th>Nhà hàng</th>
+                        <th>Giá tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for food in foods %}
+                    <tr>
+                        <td>{{ food.id }}</td>
+                        <td><strong>{{ food.name }}</strong></td>
+                        <td>{{ food.restaurant_name }}</td>
+                        <td><strong>{{ "{:,.0f}".format(food.price) }} VNĐ</strong></td>
+                        <td><span class="badge badge-{{ food.status }}">{{ food.status }}</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" onclick='editFood({{ food | tojson }})'>✏️ Sửa</button>
+                            <form action="/admin/foods/{{ food.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa món ăn này?');">
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Thêm món ăn mới</h3>
+                <button class="close-btn" onclick="closeModal('addModal')">&times;</button>
+            </div>
+            <form action="/admin/foods" method="POST">
+                <div class="form-group">
+                    <label for="restaurant_id">Nhà hàng</label>
+                    <select id="restaurant_id" name="restaurant_id" class="form-control" required>
+                        {% for res in restaurants %}
+                        <option value="{{ res.id }}">{{ res.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="food_name">Tên món ăn</label>
+                    <input type="text" id="food_name" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="food_price">Giá món ăn (VNĐ)</label>
+                    <input type="number" id="food_price" name="price" class="form-control" step="1000" required>
+                </div>
+                <div class="form-group">
+                    <label for="food_status">Trạng thái</label>
+                    <select id="food_status" name="status" class="form-control">
+                        <option value="available">Available</option>
+                        <option value="unavailable">Unavailable</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Lưu món ăn</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cập nhật món ăn</h3>
+                <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <form id="editForm" method="POST">
+                <div class="form-group">
+                    <label for="edit_restaurant_id">Nhà hàng</label>
+                    <select id="edit_restaurant_id" name="restaurant_id" class="form-control" required>
+                        {% for res in restaurants %}
+                        <option value="{{ res.id }}">{{ res.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_name">Tên món ăn</label>
+                    <input type="text" id="edit_name" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_price">Giá món ăn (VNĐ)</label>
+                    <input type="number" id="edit_price" name="price" class="form-control" step="1000" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_status">Trạng thái</label>
+                    <select id="edit_status" name="status" class="form-control">
+                        <option value="available">Available</option>
+                        <option value="unavailable">Unavailable</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Cập nhật</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        function editFood(food) {
+            document.getElementById('editForm').action = '/admin/foods/' + food.id + '/edit';
+            document.getElementById('edit_restaurant_id').value = food.restaurant_id;
+            document.getElementById('edit_name').value = food.name;
+            document.getElementById('edit_price').value = food.price;
+            document.getElementById('edit_status').value = food.status;
+            openModal('editModal');
+        }
+    </script>
+</body>
+</html>

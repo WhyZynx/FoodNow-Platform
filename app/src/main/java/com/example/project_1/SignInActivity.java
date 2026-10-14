@@ -75,21 +75,19 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
             return;
         }
 
-        boolean authenticated = ApiConfig.authenticateUser(email, password);
-
-        if (authenticated) {
-            User user = ApiConfig.getUserByEmail(email);
-            if (user != null) {
+        ApiConfig.loginUserApi(email, password, new ApiConfig.ApiCallback<User>() {
+            @Override
+            public void onSuccess(User user) {
                 userSession.createSession(user);
-            } else {
-                userSession.createSession(new User(0, "", email, password, "", ""));
+                Toast.makeText(SignInActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(SignInActivity.this, MainActivity.class));
+                finish();
             }
 
-            Toast.makeText(this, "Signed in successfully!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(SignInActivity.this, MainActivity.class));
-            finish();
-        } else {
-            Toast.makeText(this, "Incorrect email or password!", Toast.LENGTH_SHORT).show();
-        }
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(SignInActivity.this, "Đăng nhập thất bại: Email hoặc mật khẩu không đúng!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

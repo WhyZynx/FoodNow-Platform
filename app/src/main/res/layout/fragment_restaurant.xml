@@ -12,7 +12,6 @@
         android:orientation="vertical"
         android:paddingBottom="80dp">
 
-        <!-- Top Orange Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -55,7 +54,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Search Bar -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
@@ -85,7 +83,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Categories Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -94,7 +91,6 @@
             android:gravity="center"
             android:orientation="horizontal">
 
-            <!-- Burger Category -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -127,7 +123,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Trà sữa Category -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -160,7 +155,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Tráng miệng Category -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -193,7 +187,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Cay Category -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -227,7 +220,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Promo Banner Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="120dp"
@@ -262,7 +254,6 @@
             </RelativeLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Section Title: Gần bạn -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -274,7 +265,6 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- RecyclerView for Restaurants -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvRestaurant"
             android:layout_width="match_parent"

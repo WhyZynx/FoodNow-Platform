@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodNow Admin - Tổng quan</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">
+            <span>🍔</span> FoodNow Admin
+        </div>
+        <nav>
+            <a href="/admin/dashboard" class="active">📊 Tổng quan</a>
+            <a href="/admin/users">👥 Người dùng</a>
+            <a href="/admin/restaurants">🏪 Nhà hàng</a>
+            <a href="/admin/foods">🍕 Món ăn</a>
+            <a href="/admin/orders">📦 Đơn hàng</a>
+        </nav>
+        <div class="user-info">
+            <div>{{ admin_email }}</div>
+            <a href="/admin/logout">🚪 Đăng xuất</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h1>Bảng điều khiển (Dashboard)</h1>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="info">
+                    <h3>Người dùng</h3>
+                    <div class="number">{{ stats.users_count }}</div>
+                </div>
+                <div class="icon">👥</div>
+            </div>
+            <div class="stat-card">
+                <div class="info">
+                    <h3>Nhà hàng</h3>
+                    <div class="number">{{ stats.restaurants_count }}</div>
+                </div>
+                <div class="icon">🏪</div>
+            </div>
+            <div class="stat-card">
+                <div class="info">
+                    <h3>Món ăn</h3>
+                    <div class="number">{{ stats.foods_count }}</div>
+                </div>
+                <div class="icon">🍕</div>
+            </div>
+            <div class="stat-card">
+                <div class="info">
+                    <h3>Đơn hàng</h3>
+                    <div class="number">{{ stats.orders_count }}</div>
+                </div>
+                <div class="icon">📦</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Đơn hàng gần đây</h2>
+                <a href="/admin/orders" class="btn btn-secondary btn-sm">Xem tất cả</a>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Nhà hàng</th>
+                        <th>Địa chỉ giao</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.customer_name }}</td>
+                        <td>{{ order.restaurant_name }}</td>
+                        <td>{{ order.delivery_address }}</td>
+                        <td><strong>{{ "{:,.0f}".format(order.total_amount) }} VNĐ</strong></td>
+                        <td><span class="badge badge-{{ order.status }}">{{ order.status }}</span></td>
+                        <td>{{ order.created_at }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted);">Chưa có đơn hàng nào</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

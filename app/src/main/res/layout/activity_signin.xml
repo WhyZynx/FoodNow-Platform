@@ -18,13 +18,11 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Top Header Art Composed Natively with Curved Bottom Edge -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="320dp"
                 android:background="@drawable/bg_header_curve">
 
-                <!-- Main Food Bowl in Center -->
                 <ImageView
                     android:id="@+id/ivBowl"
                     android:layout_width="180dp"
@@ -38,7 +36,6 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintVertical_bias="0.6" />
 
-                <!-- Logo Badge at Top Center -->
                 <ImageView
                     android:id="@+id/ivLogo"
                     android:layout_width="140dp"
@@ -51,7 +48,6 @@
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <!-- Floating Elements -->
                 <ImageView
                     android:layout_width="40dp"
                     android:layout_height="40dp"
@@ -124,7 +120,6 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- Form Container -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -249,7 +244,6 @@
                     android:textColor="@color/colorTextSecondary"
                     android:textSize="12sp" />
 
-                <!-- Google Social Button Only (Facebook & Apple removed) -->
                 <TextView
                     android:id="@+id/btnSignInGoogle"
                     android:layout_width="match_parent"

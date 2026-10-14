@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodNow Admin - Đăng nhập</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body style="display: block;">
+    <div class="login-container">
+        <div class="login-box">
+            <h1>FoodNow Admin</h1>
+            <p>Đăng nhập trang quản trị hệ thống</p>
+            {% if error %}
+            <div class="alert-error">{{ error }}</div>
+            {% endif %}
+            <form action="/admin/login" method="POST">
+                <div class="form-group" style="text-align: left;">
+                    <label for="email">Email Admin</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="admin@foodnow.com" required>
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Đăng nhập</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

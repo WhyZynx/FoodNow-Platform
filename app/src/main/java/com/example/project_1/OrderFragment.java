@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -75,14 +76,34 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
         btnCancelBooking = view.findViewById(R.id.btnCancelBooking);
 
         btnPlaceOrder.setOnClickListener(v -> {
-            if (CartManager.getInstance().getCartItems().isEmpty()) {
+            List<Food> cartItems = CartManager.getInstance().getCartItems();
+            if (cartItems.isEmpty()) {
                 Toast.makeText(getContext(), "Giỏ hàng của bạn đang trống!", Toast.LENGTH_SHORT).show();
             } else {
-                isDriverFoundThisSession = false;
-                CartManager.getInstance().setHasActiveOrder(true);
-                Toast.makeText(getContext(), "Đơn hàng đã đặt! Đang tìm tài xế...", Toast.LENGTH_SHORT).show();
-                updateUI();
-                startDriverSearchSimulation();
+                UserSession session = new UserSession(requireContext());
+                int customerId = session.isLoggedIn() ? session.getUserDetails().getId() : 1;
+                if (customerId == 0) customerId = 1;
+
+                List<ApiConfig.OrderItemRequest> items = new ArrayList<>();
+                for (Food f : cartItems) {
+                    items.add(new ApiConfig.OrderItemRequest(1, f.quantity, f.price));
+                }
+
+                ApiConfig.createOrderApi(customerId, 1, "12 Nguyễn Huệ, Q.1", "COD", CartManager.getInstance().getTotalPrice(), items, new ApiConfig.ApiCallback<Integer>() {
+                    @Override
+                    public void onSuccess(Integer orderId) {
+                        isDriverFoundThisSession = false;
+                        CartManager.getInstance().setHasActiveOrder(true);
+                        Toast.makeText(getContext(), "Đặt đơn hàng #" + orderId + " thành công! Đang tìm tài xế...", Toast.LENGTH_SHORT).show();
+                        updateUI();
+                        startDriverSearchSimulation();
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        Toast.makeText(getContext(), "Đặt hàng thất bại, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
