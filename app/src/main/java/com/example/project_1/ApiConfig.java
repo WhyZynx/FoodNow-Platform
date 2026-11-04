@@ -3,6 +3,9 @@ package com.example.project_1;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +28,7 @@ public class ApiConfig {
     // - Emulator testing: "http://10.0.2.2:8000/"
     // - Real Phone testing: "http://<YOUR_COMPUTER_IP>:8000/" (e.g. "http://192.168.1.100:8000/")
     // =========================================================================
-    public static String BASE_URL = "http://192.168.1.100:8000/";
+    public static String BASE_URL = "http://192.168.115.158:8000/";
 
     private static Retrofit retrofit = null;
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
@@ -84,12 +87,40 @@ public class ApiConfig {
 
         @POST("orders")
         Call<CreateOrderResponse> createOrder(@Body CreateOrderRequest request);
+
+        @GET("orders/customer/{customer_id}")
+        Call<CustomerOrdersResponse> getCustomerOrders(@Path("customer_id") int customerId);
     }
 
     public static class ApiResponse<T> {
         public String status;
         public String message;
         public T user;
+    }
+
+    public static class CustomerOrdersResponse {
+        public String status;
+        public List<CustomerOrderModel> orders;
+    }
+
+    public static class CustomerOrderModel {
+        public int id;
+        public int restaurant_id;
+        public String restaurant_name;
+        public String delivery_address;
+        public String payment_method;
+        public double total_amount;
+        public String status;
+        public String created_at;
+        public List<OrderItemModel> items;
+    }
+
+    public static class OrderItemModel {
+        public int id;
+        public int food_id;
+        public String food_name;
+        public int quantity;
+        public double price;
     }
 
     public static class RestaurantListResponse {
@@ -106,6 +137,34 @@ public class ApiConfig {
         public String status;
         public String message;
         public Integer order_id;
+    }
+
+    private static String parseErrorMessage(Response<?> response, String defaultMsg) {
+        try {
+            if (response != null && response.errorBody() != null) {
+                String errorJson = response.errorBody().string();
+                if (errorJson.contains("\"detail\"")) {
+                    JsonObject jsonObject = JsonParser.parseString(errorJson).getAsJsonObject();
+                    if (jsonObject.has("detail")) {
+                        return jsonObject.get("detail").getAsString();
+                    }
+                }
+                return errorJson;
+            }
+        } catch (Exception ignored) {
+        }
+        return defaultMsg;
+    }
+
+    private static String parseNetworkError(Exception e) {
+        if (e != null && e.getMessage() != null) {
+            String msg = e.getMessage();
+            if (msg.contains("Failed to connect") || msg.contains("Connection refused") || msg.contains("Unable to resolve host") || msg.contains("CLEARTEXT")) {
+                return "Cannot connect to server (" + BASE_URL + "). Please make sure backend is running.";
+            }
+            return msg;
+        }
+        return "Network connection error";
     }
 
     public static class LoginRequest {
@@ -360,10 +419,29 @@ public class ApiConfig {
                     int orderId = response.body().order_id != null ? response.body().order_id : 0;
                     mainHandler.post(() -> callback.onSuccess(orderId));
                 } else {
-                    mainHandler.post(() -> callback.onError("Failed to create order"));
+                    String err = parseErrorMessage(response, "Failed to create order");
+                    mainHandler.post(() -> callback.onError(err));
                 }
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError(e.getMessage()));
+                mainHandler.post(() -> callback.onError(parseNetworkError(e)));
+            }
+        });
+    }
+
+    public static void getCustomerOrdersApi(int customerId, ApiCallback<List<CustomerOrderModel>> callback) {
+        executor.execute(() -> {
+            try {
+                Call<CustomerOrdersResponse> call = getApiService().getCustomerOrders(customerId);
+                Response<CustomerOrdersResponse> response = call.execute();
+                if (response.isSuccessful() && response.body() != null && "success".equals(response.body().status)) {
+                    List<CustomerOrderModel> list = response.body().orders;
+                    mainHandler.post(() -> callback.onSuccess(list != null ? list : new ArrayList<>()));
+                } else {
+                    String err = parseErrorMessage(response, "Failed to fetch order history");
+                    mainHandler.post(() -> callback.onError(err));
+                }
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(parseNetworkError(e)));
             }
         });
     }

@@ -118,7 +118,7 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.On
                                     else if (fname.contains("fruit")) img = R.drawable.tropical_fruit;
                                     else if (fname.contains("phở")) img = R.drawable.bowl;
 
-                                    menu.add(new Food(fm.name, img, (int) fm.price));
+                                    menu.add(new Food(fm.id, model.id, fm.name, img, (int) fm.price));
                                 }
                                 r.setMenu(menu);
                                 adapter.notifyDataSetChanged();

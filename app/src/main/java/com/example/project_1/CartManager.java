@@ -7,6 +7,7 @@ public class CartManager {
     private static CartManager instance;
     private List<Food> cartItems;
     private boolean hasActiveOrder = false;
+    private int restaurantId = 1;
     private String lastRestaurantName = "Restaurant";
 
     private CartManager() {
@@ -28,6 +29,14 @@ public class CartManager {
         this.hasActiveOrder = hasActiveOrder;
     }
 
+    public int getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(int restaurantId) {
+        this.restaurantId = restaurantId;
+    }
+
     public String getLastRestaurantName() {
         return lastRestaurantName;
     }
@@ -41,6 +50,9 @@ public class CartManager {
     }
 
     public void addFood(Food food) {
+        if (food.restaurantId > 0) {
+            this.restaurantId = food.restaurantId;
+        }
         for (Food item : cartItems) {
             if (item.name.equals(food.name)) {
                 item.quantity = food.quantity;
@@ -70,7 +82,7 @@ public class CartManager {
         }
         return total;
     }
-    
+
     public void clear() {
         cartItems.clear();
     }

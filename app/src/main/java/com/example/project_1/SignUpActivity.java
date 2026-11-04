@@ -2,10 +2,13 @@ package com.example.project_1;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +17,8 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
     private EditText txtFullName, txtEmail, txtPhone, txtPassword, txtConfirmPassword;
     private UserSession userSession;
+    private boolean isPasswordVisible = false;
+    private boolean isConfirmPasswordVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,10 +34,43 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         txtConfirmPassword = findViewById(R.id.txtConfirmPassword);
 
         Button btnSignUp = findViewById(R.id.btnSignUp);
-        Button btnBackSignIn = findViewById(R.id.btnBackSignIn);
+        TextView btnBackSignIn = findViewById(R.id.btnBackSignIn);
+
+        ImageView btnTogglePassword = findViewById(R.id.btnTogglePassword);
+        ImageView btnToggleConfirmPassword = findViewById(R.id.btnToggleConfirmPassword);
 
         btnSignUp.setOnClickListener(this);
         btnBackSignIn.setOnClickListener(this);
+
+        if (btnTogglePassword != null) {
+            btnTogglePassword.setOnClickListener(v -> {
+                if (isPasswordVisible) {
+                    txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    btnTogglePassword.setImageResource(R.drawable.eye);
+                    isPasswordVisible = false;
+                } else {
+                    txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    btnTogglePassword.setImageResource(R.drawable.eye_active);
+                    isPasswordVisible = true;
+                }
+                txtPassword.setSelection(txtPassword.getText().length());
+            });
+        }
+
+        if (btnToggleConfirmPassword != null) {
+            btnToggleConfirmPassword.setOnClickListener(v -> {
+                if (isConfirmPasswordVisible) {
+                    txtConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    btnToggleConfirmPassword.setImageResource(R.drawable.eye);
+                    isConfirmPasswordVisible = false;
+                } else {
+                    txtConfirmPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    btnToggleConfirmPassword.setImageResource(R.drawable.eye_active);
+                    isConfirmPasswordVisible = true;
+                }
+                txtConfirmPassword.setSelection(txtConfirmPassword.getText().length());
+            });
+        }
     }
 
     @Override

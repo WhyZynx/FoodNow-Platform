@@ -3,6 +3,7 @@ package com.example.project_1;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -84,12 +85,21 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
                 int customerId = session.isLoggedIn() ? session.getUserDetails().getId() : 1;
                 if (customerId == 0) customerId = 1;
 
+                int restaurantId = CartManager.getInstance().getRestaurantId();
+                if (restaurantId == 0) restaurantId = 1;
+
+                int subtotal = CartManager.getInstance().getTotalPrice();
+                int totalAmount = subtotal + 15000;
+
                 List<ApiConfig.OrderItemRequest> items = new ArrayList<>();
                 for (Food f : cartItems) {
-                    items.add(new ApiConfig.OrderItemRequest(1, f.quantity, f.price));
+                    items.add(new ApiConfig.OrderItemRequest(f.id > 0 ? f.id : 1, f.quantity, f.price));
                 }
 
-                ApiConfig.createOrderApi(customerId, 1, "12 Nguyễn Huệ, Q.1", "COD", CartManager.getInstance().getTotalPrice(), items, new ApiConfig.ApiCallback<Integer>() {
+                String address = session.isLoggedIn() && !TextUtils.isEmpty(session.getUserDetails().getAddress())
+                        ? session.getUserDetails().getAddress() : "123 Main Street, District 1, City";
+
+                ApiConfig.createOrderApi(customerId, restaurantId, address, "Cash on Delivery", totalAmount, items, new ApiConfig.ApiCallback<Integer>() {
                     @Override
                     public void onSuccess(Integer orderId) {
                         isDriverFoundThisSession = false;

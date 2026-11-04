@@ -7,7 +7,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,10 +18,7 @@ import androidx.fragment.app.Fragment;
 public class ProfileFragment extends Fragment {
 
     private TextView tvHeaderName, tvHeaderEmail;
-    private EditText etFullName, etEmail, etPhone, etAddress;
-
     private UserSession userSession;
-    private String currentEmail = "";
     private int currentUserId = 0;
 
     @Nullable
@@ -42,20 +38,26 @@ public class ProfileFragment extends Fragment {
 
         tvHeaderName = view.findViewById(R.id.tvHeaderName);
         tvHeaderEmail = view.findViewById(R.id.tvHeaderEmail);
-        etFullName = view.findViewById(R.id.etFullName);
-        etEmail = view.findViewById(R.id.etEmail);
-        etPhone = view.findViewById(R.id.etPhone);
-        etAddress = view.findViewById(R.id.etAddress);
 
-        Button btnUpdate = view.findViewById(R.id.btnUpdate);
-        Button btnChangePassword = view.findViewById(R.id.btnChangePassword);
-        Button btnLogout = view.findViewById(R.id.btnLogout);
+        View cardEditProfile = view.findViewById(R.id.cardEditProfile);
+        View cardChangePassword = view.findViewById(R.id.cardChangePassword);
+        View cardMyOrders = view.findViewById(R.id.cardMyOrders);
+        View cardLogout = view.findViewById(R.id.cardLogout);
 
         loadUserData();
 
-        btnUpdate.setOnClickListener(v -> handleUpdateProfile());
-        btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
-        btnLogout.setOnClickListener(v -> handleLogout());
+        if (cardEditProfile != null) {
+            cardEditProfile.setOnClickListener(v -> startActivity(new Intent(requireContext(), EditProfileActivity.class)));
+        }
+        if (cardChangePassword != null) {
+            cardChangePassword.setOnClickListener(v -> showChangePasswordDialog());
+        }
+        if (cardMyOrders != null) {
+            cardMyOrders.setOnClickListener(v -> startActivity(new Intent(requireContext(), OrderHistoryActivity.class)));
+        }
+        if (cardLogout != null) {
+            cardLogout.setOnClickListener(v -> handleLogout());
+        }
 
         return view;
     }
@@ -70,28 +72,18 @@ public class ProfileFragment extends Fragment {
         User sessionUser = userSession.getUserDetails();
         if (sessionUser != null) {
             currentUserId = sessionUser.getId();
-            currentEmail = sessionUser.getEmail();
 
             String displayName = !TextUtils.isEmpty(sessionUser.getFullName()) ? sessionUser.getFullName() : getString(R.string.text_default_user_name);
             tvHeaderName.setText(displayName);
             tvHeaderEmail.setText(sessionUser.getEmail());
 
-            etFullName.setText(sessionUser.getFullName());
-            etEmail.setText(sessionUser.getEmail());
-            etPhone.setText(sessionUser.getPhone());
-            etAddress.setText(sessionUser.getAddress());
-
             ApiConfig.getProfileApi(currentUserId, new ApiConfig.ApiCallback<User>() {
                 @Override
                 public void onSuccess(User user) {
-                    if (user != null) {
+                    if (user != null && isAdded()) {
                         String name = !TextUtils.isEmpty(user.getFullName()) ? user.getFullName() : getString(R.string.text_default_user_name);
                         tvHeaderName.setText(name);
                         tvHeaderEmail.setText(user.getEmail());
-                        etFullName.setText(user.getFullName());
-                        etEmail.setText(user.getEmail());
-                        etPhone.setText(user.getPhone());
-                        etAddress.setText(user.getAddress());
                         userSession.updateSessionProfile(user.getFullName(), user.getPhone(), user.getAddress());
                     }
                 }
@@ -101,31 +93,6 @@ public class ProfileFragment extends Fragment {
                 }
             });
         }
-    }
-
-    private void handleUpdateProfile() {
-        if (currentUserId == 0) {
-            Toast.makeText(getContext(), "Please sign in to update profile!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String fullName = etFullName.getText().toString().trim();
-        String phone = etPhone.getText().toString().trim();
-        String address = etAddress.getText().toString().trim();
-
-        ApiConfig.updateProfileApi(currentUserId, fullName, phone, address, new ApiConfig.ApiCallback<Boolean>() {
-            @Override
-            public void onSuccess(Boolean result) {
-                userSession.updateSessionProfile(fullName, phone, address);
-                tvHeaderName.setText(!TextUtils.isEmpty(fullName) ? fullName : getString(R.string.text_default_user_name));
-                Toast.makeText(getContext(), "Cập nhật hồ sơ thành công!", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onError(String errorMessage) {
-                Toast.makeText(getContext(), "Cập nhật thất bại, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void showChangePasswordDialog() {
@@ -172,13 +139,13 @@ public class ProfileFragment extends Fragment {
             ApiConfig.changePasswordApi(currentUserId, currentPass, newPass, new ApiConfig.ApiCallback<Boolean>() {
                 @Override
                 public void onSuccess(Boolean result) {
-                    Toast.makeText(getContext(), "Đổi mật khẩu thành công!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Password changed successfully!", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 }
 
                 @Override
                 public void onError(String errorMessage) {
-                    Toast.makeText(getContext(), "Mật khẩu hiện tại không chính xác!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Current password incorrect!", Toast.LENGTH_SHORT).show();
                 }
             });
         });

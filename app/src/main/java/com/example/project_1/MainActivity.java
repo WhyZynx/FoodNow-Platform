@@ -15,7 +15,8 @@ public class MainActivity extends AppCompatActivity
     private TabLayout tabLayout;
 
     private RestaurantFragment frgRestaurant;
-    private OrderFragment frgOrder;
+    private OrderHistoryFragment frgOrderHistory;
+    private OrderFragment frgCart;
     private ProfileFragment frgProfile;
 
     @Override
@@ -54,7 +55,8 @@ public class MainActivity extends AppCompatActivity
         createTabs();
 
         frgRestaurant = new RestaurantFragment();
-        frgOrder = new OrderFragment();
+        frgOrderHistory = new OrderHistoryFragment();
+        frgCart = new OrderFragment();
         frgProfile = new ProfileFragment();
 
         displayFragment(frgRestaurant);
@@ -67,19 +69,25 @@ public class MainActivity extends AppCompatActivity
     private void createTabs() {
         tabLayout.addTab(
                 tabLayout.newTab()
-                        .setText("Trang chủ")
+                        .setText("Home")
                         .setIcon(R.drawable.icon_home)
         );
 
         tabLayout.addTab(
                 tabLayout.newTab()
-                        .setText("Đơn hàng")
+                        .setText("Orders")
                         .setIcon(R.drawable.icon_order)
         );
 
         tabLayout.addTab(
                 tabLayout.newTab()
-                        .setText("Tài khoản")
+                        .setText("Cart")
+                        .setIcon(R.drawable.icon_order)
+        );
+
+        tabLayout.addTab(
+                tabLayout.newTab()
+                        .setText("Profile")
                         .setIcon(R.drawable.icon_profile)
         );
     }
@@ -96,8 +104,10 @@ public class MainActivity extends AppCompatActivity
         if (tab.getPosition() == 0) {
             displayFragment(frgRestaurant);
         } else if (tab.getPosition() == 1) {
-            displayFragment(frgOrder);
+            displayFragment(frgOrderHistory);
         } else if (tab.getPosition() == 2) {
+            displayFragment(frgCart);
+        } else if (tab.getPosition() == 3) {
             displayFragment(frgProfile);
         }
     }

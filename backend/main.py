@@ -493,27 +493,104 @@ def get_restaurant_foods(restaurant_id: int):
     db.close()
     return {"status": "success", "foods": format_dates(foods)}
 
+
 @app.post("/orders")
 def create_order(data: CreateOrderModel):
+    if not data.items:
+        raise HTTPException(status_code=400, detail="Order must contain at least one item")
+
     db = get_db_connection()
-    with db.cursor() as cursor:
-        cursor.execute("SELECT id FROM drivers WHERE status = 'active' ORDER BY RAND() LIMIT 1")
-        assigned_driver = cursor.fetchone()
-        driver_id = assigned_driver["id"] if assigned_driver else None
-        cursor.execute("""
-            INSERT INTO orders (customer_id, restaurant_id, delivery_address, payment_method, total_amount, status, driver_id)
-            VALUES (%s, %s, %s, %s, %s, 'pending', %s)
-        """, (data.customer_id, data.restaurant_id, data.delivery_address, data.payment_method, data.total_amount, driver_id))
-        order_id = cursor.lastrowid
 
-        for item in data.items:
+    try:
+        db.begin()
+
+        with db.cursor() as cursor:
+            cursor.execute(
+                "SELECT id FROM drivers WHERE status = 'active' ORDER BY RAND() LIMIT 1"
+            )
+            assigned_driver = cursor.fetchone()
+            driver_id = assigned_driver["id"] if assigned_driver else None
+
+            validated_items = []
+
+            for item in data.items:
+                if item.quantity <= 0:
+                    raise HTTPException(status_code=400, detail="Invalid item quantity")
+
+                cursor.execute("""
+                    SELECT id, price
+                    FROM foods
+                    WHERE id = %s
+                      AND restaurant_id = %s
+                      AND status = 'available'
+                """, (item.food_id, data.restaurant_id))
+
+                food = cursor.fetchone()
+
+                if not food:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Food ID {item.food_id} is invalid or unavailable"
+                    )
+
+                validated_items.append({
+                    "food_id": food["id"],
+                    "quantity": item.quantity,
+                    "price": food["price"]
+                })
+
             cursor.execute("""
-                INSERT INTO order_items (order_id, food_id, quantity, price)
-                VALUES (%s, %s, %s, %s)
-            """, (order_id, item.food_id, item.quantity, item.price))
+                INSERT INTO orders (
+                    customer_id,
+                    restaurant_id,
+                    delivery_address,
+                    payment_method,
+                    total_amount,
+                    status,
+                    driver_id
+                )
+                VALUES (%s, %s, %s, %s, %s, 'pending', %s)
+            """, (
+                data.customer_id,
+                data.restaurant_id,
+                data.delivery_address,
+                data.payment_method,
+                data.total_amount,
+                driver_id
+            ))
 
-    db.close()
-    return {"status": "success", "message": "Đặt hàng thành công", "order_id": order_id}
+            order_id = cursor.lastrowid
+
+            for item in validated_items:
+                cursor.execute("""
+                    INSERT INTO order_items (
+                        order_id,
+                        food_id,
+                        quantity,
+                        price
+                    )
+                    VALUES (%s, %s, %s, %s)
+                """, (
+                    order_id,
+                    item["food_id"],
+                    item["quantity"],
+                    item["price"]
+                ))
+
+        db.commit()
+
+        return {
+            "status": "success",
+            "message": "Order placed successfully",
+            "order_id": order_id
+        }
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
 
 @app.get("/orders/{order_id}")
 def get_order_detail(order_id: int):
@@ -551,6 +628,14 @@ def get_customer_orders(customer_id: int):
     with db.cursor() as cursor:
         cursor.execute("SELECT o.*, r.name as restaurant_name FROM orders o JOIN restaurants r ON o.restaurant_id = r.id WHERE o.customer_id = %s ORDER BY o.id DESC", (customer_id,))
         orders = cursor.fetchall()
+        for order in orders:
+            cursor.execute("""
+                SELECT oi.*, f.name as food_name
+                FROM order_items oi
+                JOIN foods f ON oi.food_id = f.id
+                WHERE oi.order_id = %s
+            """, (order['id'],))
+            order['items'] = cursor.fetchall()
     db.close()
     return {"status": "success", "orders": format_dates(orders)}
 
@@ -725,16 +810,20 @@ def admin_delete_restaurant(restaurant_id: int, admin=Depends(get_current_admin)
 
     return RedirectResponse(url="/admin/restaurants", status_code=status.HTTP_303_SEE_OTHER)
 
+
 @app.get("/admin/orders", response_class=HTMLResponse)
 def admin_orders_page(request: Request, admin=Depends(get_current_admin)):
     if not admin:
         return RedirectResponse(url="/admin/login")
 
     db = get_db_connection()
+
     with db.cursor() as cursor:
         cursor.execute("""
-            SELECT o.*, u.full_name as customer_name, r.name as restaurant_name,
-                   d.full_name as driver_name, d.phone as driver_phone
+            SELECT o.*, u.full_name AS customer_name,
+                   r.name AS restaurant_name,
+                   d.full_name AS driver_name,
+                   d.phone AS driver_phone
             FROM orders o
             JOIN users u ON o.customer_id = u.id
             JOIN restaurants r ON o.restaurant_id = r.id
@@ -742,10 +831,38 @@ def admin_orders_page(request: Request, admin=Depends(get_current_admin)):
             ORDER BY o.id DESC
         """)
         orders = cursor.fetchall()
+
+        if orders:
+            order_ids = [order["id"] for order in orders]
+            placeholders = ", ".join(["%s"] * len(order_ids))
+
+            cursor.execute(f"""
+                SELECT oi.order_id, oi.food_id, f.name AS food_name,
+                       oi.quantity, oi.price,
+                       (oi.quantity * oi.price) AS item_total
+                FROM order_items oi
+                JOIN foods f ON oi.food_id = f.id
+                WHERE oi.order_id IN ({placeholders})
+                ORDER BY oi.id ASC
+            """, order_ids)
+
+            order_items = cursor.fetchall()
+
+            items_by_order = {}
+
+            for item in order_items:
+                order_id = item["order_id"]
+                if order_id not in items_by_order:
+                    items_by_order[order_id] = []
+                items_by_order[order_id].append(item)
+
+            for order in orders:
+                order["items"] = items_by_order.get(order["id"], [])
+
     db.close()
 
     return templates.TemplateResponse(request=request, name="orders.html", context={
-        "admin_email": admin['email'],
+        "admin_email": admin["email"],
         "orders": format_dates(orders)
     })
 

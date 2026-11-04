@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoodNow - Order Management</title>
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .items-cell {
+            min-width: 190px;
+        }
+
+        .order-item {
+            padding: 7px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            display: block;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .item-detail {
+            display: block;
+            margin-top: 3px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        .no-items {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .table-wrap table {
+            min-width: 1450px;
+        }
+    </style>
 </head>
 <body>
     <div class="sidebar">
@@ -21,7 +58,7 @@
             <a href="/admin/logout">Logout</a>
         </div>
     </div>
-    
+
     <main class="main-content">
         <div class="top-bar">
             <div>
@@ -35,7 +72,7 @@
                 <h2>Order List</h2>
                 <span class="badge">{{ orders|length }} orders</span>
             </div>
-            
+
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -43,6 +80,7 @@
                             <th>Order ID</th>
                             <th>Customer</th>
                             <th>Restaurant</th>
+                            <th>Order Items</th>
                             <th>Delivery Address</th>
                             <th>Payment</th>
                             <th>Total Amount</th>
@@ -51,41 +89,102 @@
                             <th>Action</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for order in orders %}
                         <tr>
                             <td><strong>#{{ order.id }}</strong></td>
+
                             <td>{{ order.customer_name }}</td>
+
                             <td>{{ order.restaurant_name }}</td>
+
+                            <td class="items-cell">
+                                {% for item in order['items'] %}
+                                <div class="order-item">
+                                    <span class="item-name">
+                                        {{ item.food_name }}
+                                    </span>
+                                    <span class="item-detail">
+                                        Qty: {{ item.quantity }}
+                                        × {{ "{:,.0f}".format(item.price) }}đ
+                                    </span>
+                                    <span class="item-detail">
+                                        Subtotal: {{ "{:,.0f}".format(item.item_total) }}đ
+                                    </span>
+                                </div>
+                                {% else %}
+                                <span class="no-items">No items found</span>
+                                {% endfor %}
+                            </td>
+
                             <td>{{ order.delivery_address }}</td>
+
                             <td>{{ order.payment_method }}</td>
-                            <td><strong>{{ "{:,.0f}".format(order.total_amount) }}đ</strong></td>
+
+                            <td>
+                                <strong>{{ "{:,.0f}".format(order.total_amount) }}đ</strong>
+                            </td>
+
                             <td class="driver-cell">
                                 {{ order.driver_name or 'Unassigned' }}
                                 {% if order.driver_phone %}
                                     <small>{{ order.driver_phone }}</small>
                                 {% endif %}
                             </td>
+
                             <td>
-                                <span class="badge badge-{{ order.status }}">{{ order.status | capitalize }}</span>
+                                <span class="badge badge-{{ order.status }}">
+                                    {{ order.status | capitalize }}
+                                </span>
                             </td>
+
                             <td>
-                                <form class="action-form" action="/admin/orders/{{ order.id }}/status" method="POST">
-                                    <select name="order_status" class="form-control" aria-label="Status">
-                                        <option value="pending" {{ 'selected' if order.status == 'pending' else '' }}>Pending</option>
-                                        <option value="confirmed" {{ 'selected' if order.status == 'confirmed' else '' }}>Confirmed</option>
-                                        <option value="preparing" {{ 'selected' if order.status == 'preparing' else '' }}>Preparing</option>
-                                        <option value="delivering" {{ 'selected' if order.status == 'delivering' else '' }}>Delivering</option>
-                                        <option value="completed" {{ 'selected' if order.status == 'completed' else '' }}>Completed</option>
-                                        <option value="cancelled" {{ 'selected' if order.status == 'cancelled' else '' }}>Cancelled</option>
+                                <form class="action-form"
+                                      action="/admin/orders/{{ order.id }}/status"
+                                      method="POST">
+
+                                    <select name="order_status"
+                                            class="form-control"
+                                            aria-label="Status">
+
+                                        <option value="pending" {{ 'selected' if order.status == 'pending' else '' }}>
+                                            Pending
+                                        </option>
+
+                                        <option value="confirmed" {{ 'selected' if order.status == 'confirmed' else '' }}>
+                                            Confirmed
+                                        </option>
+
+                                        <option value="preparing" {{ 'selected' if order.status == 'preparing' else '' }}>
+                                            Preparing
+                                        </option>
+
+                                        <option value="delivering" {{ 'selected' if order.status == 'delivering' else '' }}>
+                                            Delivering
+                                        </option>
+
+                                        <option value="completed" {{ 'selected' if order.status == 'completed' else '' }}>
+                                            Completed
+                                        </option>
+
+                                        <option value="cancelled" {{ 'selected' if order.status == 'cancelled' else '' }}>
+                                            Cancelled
+                                        </option>
                                     </select>
-                                    <button class="btn btn-primary btn-sm" type="submit">Save</button>
+
+                                    <button class="btn btn-primary btn-sm" type="submit">
+                                        Save
+                                    </button>
                                 </form>
                             </td>
                         </tr>
+
                         {% else %}
                         <tr>
-                            <td colspan="9" class="empty-state">No orders available in the system.</td>
+                            <td colspan="10" class="empty-state">
+                                No orders available in the system.
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

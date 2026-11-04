@@ -168,9 +168,14 @@
                 android:textSize="14sp" />
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:id="@+id/btnTogglePassword"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
                 android:contentDescription="@string/text_password"
+                android:focusable="true"
+                android:padding="2dp"
                 android:src="@drawable/eye"
                 app:tint="@color/colorTextSecondary" />
         </LinearLayout>
@@ -205,9 +210,14 @@
                 android:textSize="14sp" />
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:id="@+id/btnToggleConfirmPassword"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
                 android:contentDescription="@string/confirm_password"
+                android:focusable="true"
+                android:padding="2dp"
                 android:src="@drawable/eye"
                 app:tint="@color/colorTextSecondary" />
         </LinearLayout>
@@ -228,6 +238,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -237,16 +248,14 @@
                 android:textColor="@color/colorTextSecondary"
                 android:textSize="14sp" />
 
-            <Button
+            <TextView
                 android:id="@+id/btnBackSignIn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@null"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:padding="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp"
                 android:text="Sign In"
-                android:textAllCaps="false"
                 android:textColor="@color/colorPrimary"
                 android:textSize="14sp"
                 android:textStyle="bold" />

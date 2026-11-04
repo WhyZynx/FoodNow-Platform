@@ -2,10 +2,12 @@ package com.example.project_1;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +16,7 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
 
     private EditText txtEmail, txtPassword;
     private UserSession userSession;
+    private boolean isPasswordVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,10 +36,26 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
         Button btnForgot = findViewById(R.id.btnForgot);
         Button btnSignIn = findViewById(R.id.btnSignIn);
         Button btnSignUp = findViewById(R.id.btnSignUp);
+        ImageView btnTogglePassword = findViewById(R.id.btnTogglePassword);
 
         btnForgot.setOnClickListener(this);
         btnSignIn.setOnClickListener(this);
         btnSignUp.setOnClickListener(this);
+
+        if (btnTogglePassword != null) {
+            btnTogglePassword.setOnClickListener(v -> {
+                if (isPasswordVisible) {
+                    txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    btnTogglePassword.setImageResource(R.drawable.eye);
+                    isPasswordVisible = false;
+                } else {
+                    txtPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    btnTogglePassword.setImageResource(R.drawable.eye_active);
+                    isPasswordVisible = true;
+                }
+                txtPassword.setSelection(txtPassword.getText().length());
+            });
+        }
     }
 
     @Override
