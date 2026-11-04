@@ -80,6 +80,26 @@ public class ProfileFragment extends Fragment {
             etEmail.setText(sessionUser.getEmail());
             etPhone.setText(sessionUser.getPhone());
             etAddress.setText(sessionUser.getAddress());
+
+            ApiConfig.getProfileApi(currentUserId, new ApiConfig.ApiCallback<User>() {
+                @Override
+                public void onSuccess(User user) {
+                    if (user != null) {
+                        String name = !TextUtils.isEmpty(user.getFullName()) ? user.getFullName() : getString(R.string.text_default_user_name);
+                        tvHeaderName.setText(name);
+                        tvHeaderEmail.setText(user.getEmail());
+                        etFullName.setText(user.getFullName());
+                        etEmail.setText(user.getEmail());
+                        etPhone.setText(user.getPhone());
+                        etAddress.setText(user.getAddress());
+                        userSession.updateSessionProfile(user.getFullName(), user.getPhone(), user.getAddress());
+                    }
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                }
+            });
         }
     }
 

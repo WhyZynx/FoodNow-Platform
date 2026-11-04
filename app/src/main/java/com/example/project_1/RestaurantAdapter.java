@@ -20,7 +20,7 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Vi
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView tvName, tvAddress;
+        TextView tvName, tvAddress, tvRating, tvDiscountBadge;
         ImageView ivImage;
 
         public ViewHolder(View itemView) {
@@ -29,6 +29,8 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Vi
             tvName = itemView.findViewById(R.id.tvName);
             ivImage = itemView.findViewById(R.id.ivImage);
             tvAddress = itemView.findViewById(R.id.tvAddress);
+            tvRating = itemView.findViewById(R.id.tvRating);
+            tvDiscountBadge = itemView.findViewById(R.id.tvDiscountBadge);
         }
     }
 
@@ -50,18 +52,13 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Vi
             int viewType) {
 
         Context context = parent.getContext();
-
         LayoutInflater inflater = LayoutInflater.from(context);
-
         View view = inflater.inflate(
                 R.layout.row_restaurant,
                 parent,
                 false
         );
-
-        ViewHolder viewHolder = new ViewHolder(view);
-
-        return viewHolder;
+        return new ViewHolder(view);
     }
 
     @Override
@@ -72,26 +69,32 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Vi
         final Restaurant restaurant = mRestaurants.get(position);
 
         viewHolder.tvName.setText(restaurant.name);
-
-        viewHolder.ivImage.setImageResource(restaurant.logo);
-
+        viewHolder.ivImage.setImageResource(restaurant.cover != 0 ? restaurant.cover : restaurant.logo);
         viewHolder.tvAddress.setText(restaurant.address);
 
-        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+        if (viewHolder.tvRating != null) {
+            viewHolder.tvRating.setText(restaurant.rating != null ? restaurant.rating : "4.6 (200+)");
+        }
 
+        if (viewHolder.tvDiscountBadge != null) {
+            if (restaurant.badge != null && !restaurant.badge.isEmpty()) {
+                viewHolder.tvDiscountBadge.setText(restaurant.badge);
+                viewHolder.tvDiscountBadge.setVisibility(View.VISIBLE);
+            } else {
+                viewHolder.tvDiscountBadge.setVisibility(View.GONE);
+            }
+        }
+
+        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 mListener.onRestaurantItemClick(restaurant);
-
             }
         });
     }
 
     @Override
     public int getItemCount() {
-
         return mRestaurants.size();
-
     }
 }

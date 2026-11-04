@@ -2,6 +2,8 @@ package com.example.project_1;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 public class CategoryActivity extends AppCompatActivity implements RestaurantAdapter.OnRestaurantItemClickListener {
 
     private RecyclerView rvCategoryRestaurants;
+    private TextView tvEmptyCategory;
     private RestaurantAdapter adapter;
     private ArrayList<Restaurant> categoryRestaurants;
 
@@ -32,6 +35,7 @@ public class CategoryActivity extends AppCompatActivity implements RestaurantAda
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         rvCategoryRestaurants = findViewById(R.id.rvCategoryRestaurants);
+        tvEmptyCategory = findViewById(R.id.tvEmptyCategory);
         categoryRestaurants = new ArrayList<>();
 
         ArrayList<Restaurant> allRestaurants = (ArrayList<Restaurant>) getIntent().getSerializableExtra("restaurants_list");
@@ -51,9 +55,14 @@ public class CategoryActivity extends AppCompatActivity implements RestaurantAda
                     categoryRestaurants.add(r);
                 }
             }
-            if (categoryRestaurants.isEmpty()) {
-                categoryRestaurants.addAll(allRestaurants);
-            }
+        }
+
+        if (categoryRestaurants.isEmpty()) {
+            tvEmptyCategory.setVisibility(View.VISIBLE);
+            rvCategoryRestaurants.setVisibility(View.GONE);
+        } else {
+            tvEmptyCategory.setVisibility(View.GONE);
+            rvCategoryRestaurants.setVisibility(View.VISIBLE);
         }
 
         adapter = new RestaurantAdapter(categoryRestaurants, this);

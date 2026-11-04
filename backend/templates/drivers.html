@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodNow - Driver Management</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="brand">FoodNow Admin</div>
+        <nav>
+            <a href="/admin/dashboard">Overview</a>
+            <a href="/admin/users">Users</a>
+            <a href="/admin/restaurants">Restaurants</a>
+            <a href="/admin/orders">Orders</a>
+            <a href="/admin/drivers" class="active">Drivers</a>
+        </nav>
+        <div class="user-info">
+            <div>{{ admin_email }}</div>
+            <a href="/admin/logout">Logout</a>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1>Driver Management</h1>
+                <p class="subtitle">List of sample drivers and assigned order counts.</p>
+            </div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+            <div class="stat-card">
+                <div>
+                    <h3>Total Drivers</h3>
+                    <div class="number">{{ drivers|length }}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div>
+                    <h3>Active Drivers</h3>
+                    <div class="number">{{ drivers|selectattr('status', 'equalto', 'active')|list|length }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Driver List</h2>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Driver Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Assigned Orders</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for driver in drivers %}
+                        <tr>
+                            <td>#{{ driver.id }}</td>
+                            <td><strong>{{ driver.full_name }}</strong></td>
+                            <td>{{ driver.phone }}</td>
+                            <td>{{ driver.email or '-' }}</td>
+                            <td><strong>{{ driver.order_count }}</strong></td>
+                            <td>
+                                <span class="badge badge-{{ driver.status }}">{{ driver.status | capitalize }}</span>
+                            </td>
+                            <td>
+                                <form action="/admin/drivers/{{ driver.id }}/status" method="POST">
+                                    {% if driver.status == 'active' %}
+                                    <input type="hidden" name="driver_status" value="inactive">
+                                    <button class="btn btn-danger btn-sm" type="submit">Suspend</button>
+                                    {% else %}
+                                    <input type="hidden" name="driver_status" value="active">
+                                    <button class="btn btn-primary btn-sm" type="submit">Activate</button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="empty-state">No drivers available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

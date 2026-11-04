@@ -1,12 +1,23 @@
 package com.example.project_1;
 
+import com.google.gson.annotations.SerializedName;
+
 public class User {
     private int id;
+
+    @SerializedName("full_name")
     private String fullName;
+
     private String email;
     private String password;
     private String phone;
     private String address;
+
+    @SerializedName("role")
+    private String role;
+
+    @SerializedName("status")
+    private String status;
 
     public User() {
     }
@@ -74,5 +85,21 @@ public class User {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -1,83 +1,97 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodNow Admin - Transaction</title>
+    <title>FoodNow - Order Management</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="sidebar">
-        <div class="brand">
-            <span>🍔</span> FoodNow Admin
-        </div>
+        <div class="brand">FoodNow Admin</div>
         <nav>
-            <a href="/admin/dashboard">📊 Tổng quan</a>
-            <a href="/admin/users">👥 Người dùng</a>
-            <a href="/admin/restaurants">🏪 Nhà hàng</a>
-            <a href="/admin/orders" class="active">📦 Transaction</a>
+            <a href="/admin/dashboard">Overview</a>
+            <a href="/admin/users">Users</a>
+            <a href="/admin/restaurants">Restaurants</a>
+            <a href="/admin/orders" class="active">Orders</a>
+            <a href="/admin/drivers">Drivers</a>
         </nav>
         <div class="user-info">
             <div>{{ admin_email }}</div>
-            <a href="/admin/logout">🚪 Đăng xuất</a>
+            <a href="/admin/logout">Logout</a>
         </div>
     </div>
-
-    <div class="main-content">
+    
+    <main class="main-content">
         <div class="top-bar">
-            <h1>Quản lý Transaction</h1>
+            <div>
+                <h1>Order Management</h1>
+                <p class="subtitle">Track progress, update status, and assign drivers.</p>
+            </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <h2>Danh sách giao dịch (Transactions)</h2>
+                <h2>Order List</h2>
+                <span class="badge">{{ orders|length }} orders</span>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID Giao dịch</th>
-                        <th>Khách hàng</th>
-                        <th>Nhà hàng</th>
-                        <th>Địa chỉ giao</th>
-                        <th>Thanh toán</th>
-                        <th>Tổng tiền</th>
-                        <th>Trạng thái</th>
-                        <th>Thời gian</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td>#{{ order.id }}</td>
-                        <td><strong>{{ order.customer_name }}</strong></td>
-                        <td>{{ order.restaurant_name }}</td>
-                        <td>{{ order.delivery_address }}</td>
-                        <td>{{ order.payment_method }}</td>
-                        <td><strong>{{ "{:,.0f}".format(order.total_amount) }} VNĐ</strong></td>
-                        <td><span class="badge badge-{{ order.status }}">{{ order.status }}</span></td>
-                        <td>{{ order.created_at }}</td>
-                        <td>
-                            <form action="/admin/orders/{{ order.id }}/status" method="POST" style="display:flex; gap: 5px;">
-                                <select name="status" aria-label="Order Status" class="form-control" style="padding: 4px; font-size: 12px; width: 110px;">
-                                    <option value="pending" {{ 'selected' if order.status == 'pending' else '' }}>Pending</option>
-                                    <option value="confirmed" {{ 'selected' if order.status == 'confirmed' else '' }}>Confirmed</option>
-                                    <option value="preparing" {{ 'selected' if order.status == 'preparing' else '' }}>Preparing</option>
-                                    <option value="completed" {{ 'selected' if order.status == 'completed' else '' }}>Completed</option>
-                                    <option value="cancelled" {{ 'selected' if order.status == 'cancelled' }}>Cancelled</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary btn-sm">Lưu</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="9" style="text-align: center; color: var(--text-muted);">Chưa có giao dịch nào trong hệ thống</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Restaurant</th>
+                            <th>Delivery Address</th>
+                            <th>Payment</th>
+                            <th>Total Amount</th>
+                            <th>Driver</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td><strong>#{{ order.id }}</strong></td>
+                            <td>{{ order.customer_name }}</td>
+                            <td>{{ order.restaurant_name }}</td>
+                            <td>{{ order.delivery_address }}</td>
+                            <td>{{ order.payment_method }}</td>
+                            <td><strong>{{ "{:,.0f}".format(order.total_amount) }}đ</strong></td>
+                            <td class="driver-cell">
+                                {{ order.driver_name or 'Unassigned' }}
+                                {% if order.driver_phone %}
+                                    <small>{{ order.driver_phone }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ order.status }}">{{ order.status | capitalize }}</span>
+                            </td>
+                            <td>
+                                <form class="action-form" action="/admin/orders/{{ order.id }}/status" method="POST">
+                                    <select name="order_status" class="form-control" aria-label="Status">
+                                        <option value="pending" {{ 'selected' if order.status == 'pending' else '' }}>Pending</option>
+                                        <option value="confirmed" {{ 'selected' if order.status == 'confirmed' else '' }}>Confirmed</option>
+                                        <option value="preparing" {{ 'selected' if order.status == 'preparing' else '' }}>Preparing</option>
+                                        <option value="delivering" {{ 'selected' if order.status == 'delivering' else '' }}>Delivering</option>
+                                        <option value="completed" {{ 'selected' if order.status == 'completed' else '' }}>Completed</option>
+                                        <option value="cancelled" {{ 'selected' if order.status == 'cancelled' else '' }}>Cancelled</option>
+                                    </select>
+                                    <button class="btn btn-primary btn-sm" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="empty-state">No orders available in the system.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    </main>
 </body>
 </html>

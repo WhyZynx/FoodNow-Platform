@@ -1,72 +1,77 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodNow Admin - Tổng quan</title>
+    <title>FoodNow Admin - Overview</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="sidebar">
         <div class="brand">
-            <span>🍔</span> FoodNow Admin
+            FoodNow Admin
         </div>
         <nav>
-            <a href="/admin/dashboard" class="active">📊 Tổng quan</a>
-            <a href="/admin/users">👥 Người dùng</a>
-            <a href="/admin/restaurants">🏪 Nhà hàng</a>
-            <a href="/admin/orders">📦 Transaction</a>
+            <a href="/admin/dashboard" class="active">Overview</a>
+            <a href="/admin/users">Users</a>
+            <a href="/admin/restaurants">Restaurants</a>
+            <a href="/admin/orders">Orders</a>
+            <a href="/admin/drivers">Drivers</a>
         </nav>
         <div class="user-info">
             <div>{{ admin_email }}</div>
-            <a href="/admin/logout">🚪 Đăng xuất</a>
+            <a href="/admin/logout">Logout</a>
         </div>
     </div>
 
     <div class="main-content">
         <div class="top-bar">
-            <h1>Bảng điều khiển (Dashboard)</h1>
+            <h1>Dashboard</h1>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="info">
-                    <h3>Người dùng</h3>
+                    <h3>Users</h3>
                     <div class="number">{{ stats.users_count }}</div>
                 </div>
-                <div class="icon">👥</div>
             </div>
             <div class="stat-card">
                 <div class="info">
-                    <h3>Nhà hàng</h3>
+                    <h3>Restaurants</h3>
                     <div class="number">{{ stats.restaurants_count }}</div>
                 </div>
-                <div class="icon">🏪</div>
             </div>
             <div class="stat-card">
                 <div class="info">
-                    <h3>Giao dịch</h3>
+                    <h3>Orders</h3>
                     <div class="number">{{ stats.orders_count }}</div>
                 </div>
-                <div class="icon">📦</div>
+            </div>
+            <div class="stat-card">
+                <div class="info">
+                    <h3>Drivers</h3>
+                    <div class="number">{{ stats.drivers_count }}</div>
+                </div>
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <h2>Giao dịch gần đây</h2>
-                <a href="/admin/orders" class="btn btn-secondary btn-sm">Xem tất cả</a>
+                <h2>Recent Orders</h2>
+                <a href="/admin/orders" class="btn btn-secondary btn-sm">View All</a>
             </div>
+            <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>ID Giao dịch</th>
-                        <th>Khách hàng</th>
-                        <th>Nhà hàng</th>
-                        <th>Địa chỉ giao</th>
-                        <th>Tổng tiền</th>
-                        <th>Trạng thái</th>
-                        <th>Thời gian</th>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Restaurant</th>
+                        <th>Delivery Address</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -82,11 +87,12 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted);">Chưa có giao dịch nào</td>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted);">No transactions available</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </body>

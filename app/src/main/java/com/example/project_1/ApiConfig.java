@@ -20,11 +20,27 @@ import retrofit2.http.Path;
 
 public class ApiConfig {
 
-    public static final String BASE_URL = "http://192.168.28.158:8000/";
+    // =========================================================================
+    // CONFIGURATION: API GATEWAY BASE URL
+    // - Emulator testing: "http://10.0.2.2:8000/"
+    // - Real Phone testing: "http://<YOUR_COMPUTER_IP>:8000/" (e.g. "http://192.168.1.100:8000/")
+    // =========================================================================
+    public static String BASE_URL = "http://192.168.1.100:8000/";
 
     private static Retrofit retrofit = null;
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    public static synchronized void setBaseUrl(String newBaseUrl) {
+        if (newBaseUrl != null && !newBaseUrl.trim().isEmpty()) {
+            String url = newBaseUrl.trim();
+            if (!url.endsWith("/")) {
+                url += "/";
+            }
+            BASE_URL = url;
+            retrofit = null;
+        }
+    }
 
     public interface ApiCallback<T> {
         void onSuccess(T result);
@@ -235,6 +251,23 @@ public class ApiConfig {
         });
     }
 
+    public static void getProfileApi(int userId, ApiCallback<User> callback) {
+        executor.execute(() -> {
+            try {
+                Call<ApiResponse<User>> call = getApiService().getProfile(userId);
+                Response<ApiResponse<User>> response = call.execute();
+                if (response.isSuccessful() && response.body() != null && "success".equals(response.body().status)) {
+                    User user = response.body().user;
+                    mainHandler.post(() -> callback.onSuccess(user));
+                } else {
+                    mainHandler.post(() -> callback.onError("Failed to fetch profile"));
+                }
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
     public static void updateProfileApi(int userId, String fullName, String phone, String address, ApiCallback<Boolean> callback) {
         executor.execute(() -> {
             try {
@@ -260,6 +293,22 @@ public class ApiConfig {
                     mainHandler.post(() -> callback.onSuccess(true));
                 } else {
                     mainHandler.post(() -> callback.onError("Change password failed"));
+                }
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    public static void forgotPasswordApi(String email, String newPassword, ApiCallback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                Call<ApiResponse<Void>> call = getApiService().forgotPassword(new ForgotPasswordRequest(email, newPassword));
+                Response<ApiResponse<Void>> response = call.execute();
+                if (response.isSuccessful() && response.body() != null && "success".equals(response.body().status)) {
+                    mainHandler.post(() -> callback.onSuccess(true));
+                } else {
+                    mainHandler.post(() -> callback.onError("Forgot password failed"));
                 }
             } catch (Exception e) {
                 mainHandler.post(() -> callback.onError(e.getMessage()));

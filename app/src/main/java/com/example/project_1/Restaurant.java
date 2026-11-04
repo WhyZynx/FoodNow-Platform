@@ -10,6 +10,8 @@ public class Restaurant implements Serializable {
     int cover;
     String address;
     String openHours;
+    String rating = "4.6 (200+)";
+    String badge = "";
     ArrayList<Food> menu;
 
     public Restaurant(
@@ -24,6 +26,27 @@ public class Restaurant implements Serializable {
         this.cover = cover;
         this.address = address;
         this.openHours = openHours;
+        this.rating = "4.6 (200+)";
+        this.badge = "";
+        this.menu = new ArrayList<>();
+    }
+
+    public Restaurant(
+            String name,
+            int logo,
+            int cover,
+            String address,
+            String openHours,
+            String rating,
+            String badge) {
+
+        this.name = name;
+        this.logo = logo;
+        this.cover = cover;
+        this.address = address;
+        this.openHours = openHours;
+        this.rating = rating;
+        this.badge = badge;
         this.menu = new ArrayList<>();
     }
 

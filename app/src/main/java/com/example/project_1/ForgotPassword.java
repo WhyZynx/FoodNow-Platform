@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class ForgotPassword extends AppCompatActivity implements View.OnClickListener {
 
-    private EditText txtEmail;
+    private EditText txtEmail, txtNewPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +20,7 @@ public class ForgotPassword extends AppCompatActivity implements View.OnClickLis
         setContentView(R.layout.activity_forgot_password);
 
         txtEmail = findViewById(R.id.txtEmail);
+        txtNewPassword = findViewById(R.id.txtNewPassword);
         Button btnResetPassword = findViewById(R.id.btnResetPassword);
         Button btnBackSignIn = findViewById(R.id.btnBackSignIn);
 
@@ -41,6 +42,7 @@ public class ForgotPassword extends AppCompatActivity implements View.OnClickLis
 
     private void handleResetPassword() {
         String email = txtEmail.getText().toString().trim();
+        String newPassword = txtNewPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(email)) {
             txtEmail.setError("Please enter Email");
@@ -48,8 +50,24 @@ public class ForgotPassword extends AppCompatActivity implements View.OnClickLis
             return;
         }
 
-        Toast.makeText(this, "Reset code sent to your email!", Toast.LENGTH_SHORT).show();
-        startActivity(new Intent(ForgotPassword.this, SignInActivity.class));
-        finish();
+        if (TextUtils.isEmpty(newPassword) || newPassword.length() < 6) {
+            txtNewPassword.setError("Password must be at least 6 characters");
+            txtNewPassword.requestFocus();
+            return;
+        }
+
+        ApiConfig.forgotPasswordApi(email, newPassword, new ApiConfig.ApiCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+                Toast.makeText(ForgotPassword.this, "Password reset successfully! Please sign in.", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(ForgotPassword.this, SignInActivity.class));
+                finish();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(ForgotPassword.this, "Password reset failed: Email not found!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

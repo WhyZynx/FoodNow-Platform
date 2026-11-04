@@ -6,7 +6,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,14 +33,10 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
         Button btnForgot = findViewById(R.id.btnForgot);
         Button btnSignIn = findViewById(R.id.btnSignIn);
         Button btnSignUp = findViewById(R.id.btnSignUp);
-        TextView btnSignInGoogle = findViewById(R.id.btnSignInGoogle);
 
         btnForgot.setOnClickListener(this);
         btnSignIn.setOnClickListener(this);
         btnSignUp.setOnClickListener(this);
-        if (btnSignInGoogle != null) {
-            btnSignInGoogle.setOnClickListener(this);
-        }
     }
 
     @Override
@@ -53,9 +48,7 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
         } else if (id == R.id.btnSignIn) {
             handleSignIn();
         } else if (id == R.id.btnSignUp) {
-            startActivity(new Intent(SignInActivity.this, SignInActivity.class).setClass(this, SignUpActivity.class));
-        } else if (id == R.id.btnSignInGoogle) {
-            Toast.makeText(this, "Google sign-in feature is under development", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(SignInActivity.this, SignUpActivity.class));
         }
     }
 
@@ -79,14 +72,14 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onSuccess(User user) {
                 userSession.createSession(user);
-                Toast.makeText(SignInActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignInActivity.this, "Sign in successful!", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(SignInActivity.this, MainActivity.class));
                 finish();
             }
 
             @Override
             public void onError(String errorMessage) {
-                Toast.makeText(SignInActivity.this, "Đăng nhập thất bại: Email hoặc mật khẩu không đúng!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignInActivity.this, "Sign in failed: " + errorMessage, Toast.LENGTH_LONG).show();
             }
         });
     }

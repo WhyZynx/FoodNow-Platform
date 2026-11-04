@@ -1,4 +1,5 @@
 import os
+import random
 import bcrypt
 import pymysql
 import pymysql.cursors
@@ -162,6 +163,25 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS drivers (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                full_name VARCHAR(255) NOT NULL,
+                phone VARCHAR(50) NOT NULL UNIQUE,
+                email VARCHAR(255) UNIQUE,
+                status VARCHAR(20) DEFAULT 'active',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """)
+
+        cursor.execute("SHOW COLUMNS FROM orders LIKE 'driver_id'")
+        if not cursor.fetchone():
+            cursor.execute("""
+                ALTER TABLE orders ADD COLUMN driver_id INT NULL,
+                ADD CONSTRAINT fk_orders_driver
+                FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE SET NULL
+            """)
+
         demo_accounts = [
             ("FoodNow User", "user@foodnow.com", "123456", "0901234567", "123 Lê Lợi, Q.1, TP.HCM", "customer"),
             ("FoodNow Admin", "admin@foodnow.com", "123456", "0909999999", "Quản trị viên FoodNow", "admin")
@@ -236,6 +256,32 @@ def init_db():
                             INSERT INTO foods (restaurant_id, name, price, image, status)
                             VALUES (%s, %s, %s, '', 'available')
                         """, (r_id, f_name, f_price))
+
+        drivers_data = [
+            ("Nguyễn Văn An", "0901000001", "an.driver@foodnow.com"),
+            ("Trần Minh Bình", "0901000002", "binh.driver@foodnow.com"),
+            ("Lê Hoàng Cường", "0901000003", "cuong.driver@foodnow.com"),
+            ("Phạm Quốc Dũng", "0901000004", "dung.driver@foodnow.com"),
+            ("Võ Thanh Hải", "0901000005", "hai.driver@foodnow.com")
+        ]
+        for driver_name, driver_phone, driver_email in drivers_data:
+            cursor.execute("SELECT id FROM drivers WHERE phone = %s", (driver_phone,))
+            if not cursor.fetchone():
+                cursor.execute(
+                    "INSERT INTO drivers (full_name, phone, email, status) VALUES (%s, %s, %s, 'active')",
+                    (driver_name, driver_phone, driver_email)
+                )
+
+        cursor.execute("""
+            UPDATE orders o
+            SET driver_id = (
+                SELECT id FROM drivers
+                WHERE status = 'active'
+                ORDER BY RAND()
+                LIMIT 1
+            )
+            WHERE driver_id IS NULL
+        """)
 
     db.close()
 
@@ -451,10 +497,13 @@ def get_restaurant_foods(restaurant_id: int):
 def create_order(data: CreateOrderModel):
     db = get_db_connection()
     with db.cursor() as cursor:
+        cursor.execute("SELECT id FROM drivers WHERE status = 'active' ORDER BY RAND() LIMIT 1")
+        assigned_driver = cursor.fetchone()
+        driver_id = assigned_driver["id"] if assigned_driver else None
         cursor.execute("""
-            INSERT INTO orders (customer_id, restaurant_id, delivery_address, payment_method, total_amount, status)
-            VALUES (%s, %s, %s, %s, %s, 'pending')
-        """, (data.customer_id, data.restaurant_id, data.delivery_address, data.payment_method, data.total_amount))
+            INSERT INTO orders (customer_id, restaurant_id, delivery_address, payment_method, total_amount, status, driver_id)
+            VALUES (%s, %s, %s, %s, %s, 'pending', %s)
+        """, (data.customer_id, data.restaurant_id, data.delivery_address, data.payment_method, data.total_amount, driver_id))
         order_id = cursor.lastrowid
 
         for item in data.items:
@@ -549,6 +598,9 @@ def admin_dashboard(request: Request, admin=Depends(get_current_admin)):
         cursor.execute("SELECT COUNT(*) as o_cnt FROM orders")
         o_cnt = cursor.fetchone()['o_cnt']
 
+        cursor.execute("SELECT COUNT(*) as d_cnt FROM drivers")
+        d_cnt = cursor.fetchone()['d_cnt']
+
         cursor.execute("""
             SELECT o.*, u.full_name as customer_name, r.name as restaurant_name
             FROM orders o
@@ -564,7 +616,8 @@ def admin_dashboard(request: Request, admin=Depends(get_current_admin)):
         "users_count": u_cnt,
         "restaurants_count": r_cnt,
         "foods_count": f_cnt,
-        "orders_count": o_cnt
+        "orders_count": o_cnt,
+        "drivers_count": d_cnt
     }
 
     return templates.TemplateResponse(request=request, name="dashboard.html", context={
@@ -680,10 +733,12 @@ def admin_orders_page(request: Request, admin=Depends(get_current_admin)):
     db = get_db_connection()
     with db.cursor() as cursor:
         cursor.execute("""
-            SELECT o.*, u.full_name as customer_name, r.name as restaurant_name
+            SELECT o.*, u.full_name as customer_name, r.name as restaurant_name,
+                   d.full_name as driver_name, d.phone as driver_phone
             FROM orders o
             JOIN users u ON o.customer_id = u.id
             JOIN restaurants r ON o.restaurant_id = r.id
+            LEFT JOIN drivers d ON o.driver_id = d.id
             ORDER BY o.id DESC
         """)
         orders = cursor.fetchall()
@@ -695,13 +750,54 @@ def admin_orders_page(request: Request, admin=Depends(get_current_admin)):
     })
 
 @app.post("/admin/orders/{order_id}/status")
-def admin_update_order_status(order_id: int, status: str = Form(...), admin=Depends(get_current_admin)):
+def admin_update_order_status(order_id: int, order_status: str = Form(...), driver_id: str = Form(""), admin=Depends(get_current_admin)):
     if not admin:
         raise HTTPException(status_code=401, detail="Unauthorized")
+    allowed_statuses = {"pending", "confirmed", "preparing", "delivering", "completed", "cancelled"}
+    if order_status not in allowed_statuses:
+        raise HTTPException(status_code=400, detail="Trạng thái đơn hàng không hợp lệ")
 
     db = get_db_connection()
     with db.cursor() as cursor:
-        cursor.execute("UPDATE orders SET status = %s WHERE id = %s", (status, order_id))
+        if driver_id:
+            cursor.execute("SELECT id FROM drivers WHERE id = %s AND status = 'active'", (driver_id,))
+            if not cursor.fetchone():
+                db.close()
+                raise HTTPException(status_code=400, detail="Tài xế không hợp lệ hoặc đang ngừng hoạt động")
+            cursor.execute("UPDATE orders SET status = %s, driver_id = %s WHERE id = %s", (order_status, driver_id, order_id))
+        else:
+            cursor.execute("UPDATE orders SET status = %s WHERE id = %s", (order_status, order_id))
     db.close()
-
     return RedirectResponse(url="/admin/orders", status_code=status.HTTP_303_SEE_OTHER)
+
+@app.get("/admin/drivers", response_class=HTMLResponse)
+def admin_drivers_page(request: Request, admin=Depends(get_current_admin)):
+    if not admin:
+        return RedirectResponse(url="/admin/login")
+    db = get_db_connection()
+    with db.cursor() as cursor:
+        cursor.execute("""
+            SELECT d.*, COUNT(o.id) AS order_count
+            FROM drivers d
+            LEFT JOIN orders o ON o.driver_id = d.id
+            GROUP BY d.id
+            ORDER BY d.id
+        """)
+        drivers = cursor.fetchall()
+    db.close()
+    return templates.TemplateResponse(request=request, name="drivers.html", context={
+        "admin_email": admin["email"],
+        "drivers": format_dates(drivers)
+    })
+
+@app.post("/admin/drivers/{driver_id}/status")
+def admin_update_driver_status(driver_id: int, driver_status: str = Form(...), admin=Depends(get_current_admin)):
+    if not admin:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if driver_status not in {"active", "inactive"}:
+        raise HTTPException(status_code=400, detail="Trạng thái tài xế không hợp lệ")
+    db = get_db_connection()
+    with db.cursor() as cursor:
+        cursor.execute("UPDATE drivers SET status = %s WHERE id = %s", (driver_status, driver_id))
+    db.close()
+    return RedirectResponse(url="/admin/drivers", status_code=status.HTTP_303_SEE_OTHER)

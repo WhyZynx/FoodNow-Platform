@@ -1,48 +1,50 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FoodNow Admin - Quản lý người dùng</title>
+    <title>FoodNow Admin - User Management</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="sidebar">
         <div class="brand">
-            <span>🍔</span> FoodNow Admin
+            FoodNow Admin
         </div>
         <nav>
-            <a href="/admin/dashboard">📊 Tổng quan</a>
-            <a href="/admin/users" class="active">👥 Người dùng</a>
-            <a href="/admin/restaurants">🏪 Nhà hàng</a>
-            <a href="/admin/orders">📦 Transaction</a>
+            <a href="/admin/dashboard">Overview</a>
+            <a href="/admin/users" class="active">Users</a>
+            <a href="/admin/restaurants">Restaurants</a>
+            <a href="/admin/orders">Orders</a>
+            <a href="/admin/drivers">Drivers</a>
         </nav>
         <div class="user-info">
             <div>{{ admin_email }}</div>
-            <a href="/admin/logout">🚪 Đăng xuất</a>
+            <a href="/admin/logout">Logout</a>
         </div>
     </div>
 
     <div class="main-content">
         <div class="top-bar">
-            <h1>Quản lý người dùng</h1>
+            <h1>User Management</h1>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <h2>Danh sách tài khoản</h2>
+                <h2>Account List</h2>
             </div>
+            <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Họ tên</th>
+                        <th>Full Name</th>
                         <th>Email</th>
-                        <th>Số điện thoại</th>
-                        <th>Địa chỉ</th>
-                        <th>Vai trò</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -60,10 +62,10 @@
                             <form action="/admin/users/{{ user.id }}/status" method="POST" style="display:inline;">
                                 {% if user.status == 'active' %}
                                 <input type="hidden" name="status" value="inactive">
-                                <button type="submit" class="btn btn-danger btn-sm">🔒 Khóa</button>
+                                <button type="submit" class="btn btn-danger btn-sm">Lock</button>
                                 {% else %}
                                 <input type="hidden" name="status" value="active">
-                                <button type="submit" class="btn btn-primary btn-sm">🔓 Mở khóa</button>
+                                <button type="submit" class="btn btn-primary btn-sm">Unlock</button>
                                 {% endif %}
                             </form>
                             {% else %}
@@ -74,6 +76,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </body>
