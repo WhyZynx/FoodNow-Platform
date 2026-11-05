@@ -22,12 +22,13 @@ public class UserSession {
     }
 
     public void createSession(User user) {
+        if (user == null) return;
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
         editor.putInt(KEY_ID, user.getId());
-        editor.putString(KEY_FULL_NAME, user.getFullName());
-        editor.putString(KEY_EMAIL, user.getEmail());
-        editor.putString(KEY_PHONE, user.getPhone());
-        editor.putString(KEY_ADDRESS, user.getAddress());
+        editor.putString(KEY_FULL_NAME, user.getFullName() != null ? user.getFullName() : "");
+        editor.putString(KEY_EMAIL, user.getEmail() != null ? user.getEmail() : "");
+        editor.putString(KEY_PHONE, user.getPhone() != null ? user.getPhone() : "");
+        editor.putString(KEY_ADDRESS, user.getAddress() != null ? user.getAddress() : "");
         editor.apply();
     }
 

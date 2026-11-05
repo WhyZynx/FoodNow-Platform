@@ -57,7 +57,7 @@ public class RestaurantActivity extends AppCompatActivity
 
         layoutViewBasket.setOnClickListener(v -> {
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("target_tab", 1);
+            intent.putExtra("target_tab", 2);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
             finish();
@@ -84,10 +84,12 @@ public class RestaurantActivity extends AppCompatActivity
     }
 
     private void syncCart(ArrayList<Food> menu) {
+        if (menu == null) return;
         List<Food> cartItems = CartManager.getInstance().getCartItems();
         for (Food menuFood : menu) {
+            if (menuFood == null || menuFood.name == null) continue;
             for (Food cartFood : cartItems) {
-                if (menuFood.name.equals(cartFood.name)) {
+                if (cartFood != null && menuFood.name.equals(cartFood.name)) {
                     menuFood.quantity = cartFood.quantity;
                 }
             }
@@ -97,9 +99,13 @@ public class RestaurantActivity extends AppCompatActivity
     private void updateBasketInitial() {
         totalItems = 0;
         totalPrice = 0;
-        for (Food f : restaurant.menu) {
-            totalItems += f.quantity;
-            totalPrice += f.price * f.quantity;
+        if (restaurant != null && restaurant.menu != null) {
+            for (Food f : restaurant.menu) {
+                if (f != null) {
+                    totalItems += f.quantity;
+                    totalPrice += f.price * f.quantity;
+                }
+            }
         }
         updateBasket();
     }

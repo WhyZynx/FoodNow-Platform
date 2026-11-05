@@ -69,7 +69,10 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Vi
         final Restaurant restaurant = mRestaurants.get(position);
 
         viewHolder.tvName.setText(restaurant.name);
-        viewHolder.ivImage.setImageResource(restaurant.cover != 0 ? restaurant.cover : restaurant.logo);
+        int imgRes = restaurant.cover != 0 ? restaurant.cover : restaurant.logo;
+        if (imgRes != 0) {
+            viewHolder.ivImage.setImageResource(imgRes);
+        }
         viewHolder.tvAddress.setText(restaurant.address);
 
         if (viewHolder.tvRating != null) {

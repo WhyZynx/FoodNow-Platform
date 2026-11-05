@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,9 +34,9 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
 
         txtEmail = findViewById(R.id.txtEmail);
         txtPassword = findViewById(R.id.txtPassword);
-        Button btnForgot = findViewById(R.id.btnForgot);
+        TextView btnForgot = findViewById(R.id.btnForgot);
         Button btnSignIn = findViewById(R.id.btnSignIn);
-        Button btnSignUp = findViewById(R.id.btnSignUp);
+        TextView btnSignUp = findViewById(R.id.btnSignUp);
         ImageView btnTogglePassword = findViewById(R.id.btnTogglePassword);
 
         btnForgot.setOnClickListener(this);

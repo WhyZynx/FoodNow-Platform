@@ -50,14 +50,17 @@ public class CartManager {
     }
 
     public void addFood(Food food) {
+        if (food == null) return;
         if (food.restaurantId > 0) {
             this.restaurantId = food.restaurantId;
         }
-        for (Food item : cartItems) {
-            if (item.name.equals(food.name)) {
+        String foodName = food.name != null ? food.name : "";
+        for (int i = 0; i < cartItems.size(); i++) {
+            Food item = cartItems.get(i);
+            if (item != null && foodName.equals(item.name)) {
                 item.quantity = food.quantity;
                 if (item.quantity <= 0) {
-                    cartItems.remove(item);
+                    cartItems.remove(i);
                 }
                 return;
             }

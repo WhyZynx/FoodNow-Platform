@@ -15,7 +15,8 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            UserSession userSession = new UserSession(this);
+            if (isFinishing() || isDestroyed()) return;
+            UserSession userSession = new UserSession(SplashActivity.this);
             Intent intent;
             if (userSession.isLoggedIn()) {
                 intent = new Intent(SplashActivity.this, MainActivity.class);

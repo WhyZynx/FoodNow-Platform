@@ -3,16 +3,16 @@ package com.example.project_1;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public class MainActivity extends AppCompatActivity
-        implements TabLayout.OnTabSelectedListener {
+public class MainActivity extends AppCompatActivity {
 
-    private TabLayout tabLayout;
+    private BottomNavigationView bottomNavigation;
 
     private RestaurantFragment frgRestaurant;
     private OrderHistoryFragment frgOrderHistory;
@@ -29,10 +29,29 @@ public class MainActivity extends AppCompatActivity
     private void handleIntent() {
         int targetTab = getIntent().getIntExtra("target_tab", -1);
         if (targetTab != -1) {
-            TabLayout.Tab tab = tabLayout.getTabAt(targetTab);
-            if (tab != null) {
-                tab.select();
-            }
+            selectTab(targetTab);
+        }
+    }
+
+    public void selectTab(int tabIndex) {
+        if (bottomNavigation != null) {
+            if (tabIndex == 0) bottomNavigation.setSelectedItemId(R.id.nav_home);
+            else if (tabIndex == 1) bottomNavigation.setSelectedItemId(R.id.nav_orders);
+            else if (tabIndex == 2) bottomNavigation.setSelectedItemId(R.id.nav_cart);
+            else if (tabIndex == 3) bottomNavigation.setSelectedItemId(R.id.nav_profile);
+        }
+    }
+
+    public void updateCartBadge() {
+        if (bottomNavigation == null) return;
+        int totalItems = CartManager.getInstance().getTotalItems();
+        if (totalItems > 0) {
+            BadgeDrawable badge = bottomNavigation.getOrCreateBadge(R.id.nav_cart);
+            badge.setVisible(true);
+            badge.setNumber(totalItems);
+            badge.setBackgroundColor(ContextCompat.getColor(this, R.color.colorRed));
+        } else {
+            bottomNavigation.removeBadge(R.id.nav_cart);
         }
     }
 
@@ -50,9 +69,7 @@ public class MainActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_main);
 
-        tabLayout = findViewById(R.id.tabLayout);
-
-        createTabs();
+        bottomNavigation = findViewById(R.id.bottomNavigation);
 
         frgRestaurant = new RestaurantFragment();
         frgOrderHistory = new OrderHistoryFragment();
@@ -61,35 +78,32 @@ public class MainActivity extends AppCompatActivity
 
         displayFragment(frgRestaurant);
 
-        tabLayout.addOnTabSelectedListener(this);
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                displayFragment(frgRestaurant);
+                return true;
+            } else if (itemId == R.id.nav_orders) {
+                displayFragment(frgOrderHistory);
+                return true;
+            } else if (itemId == R.id.nav_cart) {
+                displayFragment(frgCart);
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                displayFragment(frgProfile);
+                return true;
+            }
+            return false;
+        });
 
         handleIntent();
+        updateCartBadge();
     }
 
-    private void createTabs() {
-        tabLayout.addTab(
-                tabLayout.newTab()
-                        .setText("Home")
-                        .setIcon(R.drawable.icon_home)
-        );
-
-        tabLayout.addTab(
-                tabLayout.newTab()
-                        .setText("Orders")
-                        .setIcon(R.drawable.icon_order)
-        );
-
-        tabLayout.addTab(
-                tabLayout.newTab()
-                        .setText("Cart")
-                        .setIcon(R.drawable.icon_order)
-        );
-
-        tabLayout.addTab(
-                tabLayout.newTab()
-                        .setText("Profile")
-                        .setIcon(R.drawable.icon_profile)
-        );
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateCartBadge();
     }
 
     protected void displayFragment(Fragment fragment) {
@@ -97,28 +111,5 @@ public class MainActivity extends AppCompatActivity
                 .beginTransaction()
                 .replace(R.id.layoutContainer, fragment)
                 .commit();
-    }
-
-    @Override
-    public void onTabSelected(@NonNull TabLayout.Tab tab) {
-        if (tab.getPosition() == 0) {
-            displayFragment(frgRestaurant);
-        } else if (tab.getPosition() == 1) {
-            displayFragment(frgOrderHistory);
-        } else if (tab.getPosition() == 2) {
-            displayFragment(frgCart);
-        } else if (tab.getPosition() == 3) {
-            displayFragment(frgProfile);
-        }
-    }
-
-    @Override
-    public void onTabUnselected(@NonNull TabLayout.Tab tab) {
-
-    }
-
-    @Override
-    public void onTabReselected(@NonNull TabLayout.Tab tab) {
-
     }
 }

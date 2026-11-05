@@ -281,13 +281,17 @@ public class ApiConfig {
                 Response<ApiResponse<User>> response = call.execute();
                 if (response.isSuccessful() && response.body() != null && "success".equals(response.body().status)) {
                     User user = response.body().user;
-                    mainHandler.post(() -> callback.onSuccess(user));
+                    if (user != null) {
+                        mainHandler.post(() -> callback.onSuccess(user));
+                    } else {
+                        mainHandler.post(() -> callback.onError("User data is missing in response"));
+                    }
                 } else {
-                    String err = response.errorBody() != null ? response.errorBody().string() : "Login failed";
+                    String err = parseErrorMessage(response, "Login failed");
                     mainHandler.post(() -> callback.onError(err));
                 }
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError(e.getMessage()));
+                mainHandler.post(() -> callback.onError(parseNetworkError(e)));
             }
         });
     }
@@ -299,13 +303,17 @@ public class ApiConfig {
                 Response<ApiResponse<User>> response = call.execute();
                 if (response.isSuccessful() && response.body() != null && "success".equals(response.body().status)) {
                     User user = response.body().user;
-                    mainHandler.post(() -> callback.onSuccess(user));
+                    if (user != null) {
+                        mainHandler.post(() -> callback.onSuccess(user));
+                    } else {
+                        mainHandler.post(() -> callback.onError("User data is missing in response"));
+                    }
                 } else {
-                    String err = response.errorBody() != null ? response.errorBody().string() : "Registration failed";
+                    String err = parseErrorMessage(response, "Registration failed");
                     mainHandler.post(() -> callback.onError(err));
                 }
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError(e.getMessage()));
+                mainHandler.post(() -> callback.onError(parseNetworkError(e)));
             }
         });
     }

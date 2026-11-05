@@ -44,10 +44,6 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".CategoryActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
             android:name=".OrderHistoryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

@@ -15,17 +15,17 @@
         android:layout_weight="1"
         android:background="@color/colorBackground" />
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:background="@color/white"
+        android:background="@drawable/bg_bottom_nav"
         android:elevation="12dp"
-        app:tabGravity="fill"
-        app:tabIndicatorHeight="0dp"
-        app:tabMode="fixed"
-        app:tabRippleColor="@null"
-        app:tabSelectedTextColor="@color/colorPrimary"
-        app:tabTextColor="@color/colorTextSecondary" />
+        app:elevation="12dp"
+        app:itemIconTint="@color/bottom_nav_color"
+        app:itemRippleColor="@null"
+        app:itemTextColor="@color/bottom_nav_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
 
 </LinearLayout>

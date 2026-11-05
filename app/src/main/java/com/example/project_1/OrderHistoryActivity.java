@@ -53,7 +53,8 @@ public class OrderHistoryActivity extends AppCompatActivity {
             return;
         }
 
-        int customerId = userSession.getUserDetails().getId();
+        User user = userSession.getUserDetails();
+        int customerId = user != null ? user.getId() : 1;
         if (customerId == 0) customerId = 1;
 
         ApiConfig.getCustomerOrdersApi(customerId, new ApiConfig.ApiCallback<List<ApiConfig.CustomerOrderModel>>() {

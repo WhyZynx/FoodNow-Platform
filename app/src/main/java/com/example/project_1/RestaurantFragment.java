@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,10 +16,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RestaurantFragment extends Fragment implements RestaurantAdapter.OnRestaurantItemClickListener {
+public class RestaurantFragment extends Fragment implements RestaurantVerticalAdapter.OnRestaurantItemClickListener {
 
     RecyclerView rvRestaurant;
-    RestaurantAdapter adapter;
+    TextView tvEmptyRestaurants;
+    RestaurantVerticalAdapter adapter;
     ArrayList<Restaurant> restaurantList;
     ArrayList<Restaurant> fullRestaurantList;
 
@@ -36,71 +38,60 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.On
         );
 
         rvRestaurant = view.findViewById(R.id.rvRestaurant);
+        tvEmptyRestaurants = view.findViewById(R.id.tvEmptyRestaurants);
         restaurantList = new ArrayList<>();
         fullRestaurantList = new ArrayList<>();
 
-        adapter = new RestaurantAdapter(restaurantList, this);
-        rvRestaurant.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        adapter = new RestaurantVerticalAdapter(restaurantList, this);
+        rvRestaurant.setLayoutManager(new LinearLayoutManager(getContext()));
         rvRestaurant.setAdapter(adapter);
-
-        view.findViewById(R.id.layoutCategoryPokeFusion).setOnClickListener(v -> openCategory("Poke"));
-        view.findViewById(R.id.layoutCategoryBurger).setOnClickListener(v -> openCategory("Burger"));
-        view.findViewById(R.id.layoutCategoryPokeParadise).setOnClickListener(v -> openCategory("Strawberry Latte"));
-        view.findViewById(R.id.layoutCategoryFreshGarden).setOnClickListener(v -> openCategory("Fruit"));
 
         loadRestaurantsFromApi();
 
         return view;
     }
 
-    private void openCategory(String categoryName) {
-        Intent intent = new Intent(getContext(), CategoryActivity.class);
-        intent.putExtra("category_name", categoryName);
-        intent.putExtra("restaurants_list", fullRestaurantList);
-        startActivity(intent);
-    }
-
     private void loadRestaurantsFromApi() {
         ApiConfig.getRestaurantsApi(new ApiConfig.ApiCallback<List<ApiConfig.RestaurantModel>>() {
             @Override
             public void onSuccess(List<ApiConfig.RestaurantModel> models) {
+                if (!isAdded() || getView() == null) return;
                 if (models != null) {
                     fullRestaurantList.clear();
                     for (ApiConfig.RestaurantModel model : models) {
                         int logoRes = R.drawable.ic_circlek;
                         int coverRes = R.drawable.cover_menu_1;
-                        String rname = model.name.toLowerCase();
-                        if (rname.contains("highland")) {
+                        String rname = model.name != null ? model.name.toLowerCase() : "";
+                        if (rname.contains("highland") || rname.contains("coffee")) {
                             logoRes = R.drawable.ic_highland;
-                            coverRes = R.drawable.matcha_latte;
                         } else if (rname.contains("ministop")) {
                             logoRes = R.drawable.ic_ministop;
-                            coverRes = R.drawable.takoyaki;
-                        } else if (rname.contains("7") || rname.contains("eleven")) {
+                        } else if (rname.contains("7") || rname.contains("eleven") || rname.contains("seven")) {
                             logoRes = R.drawable.ic_seveneleven;
-                            coverRes = R.drawable.sandwich;
-                        } else if (rname.contains("vin")) {
+                        } else if (rname.contains("vin") || rname.contains("winmart") || rname.contains("vinmart")) {
                             logoRes = R.drawable.ic_vinmart;
-                            coverRes = R.drawable.tropical_fruit;
-                        } else if (rname.contains("circle")) {
+                        } else if (rname.contains("circle") || rname.contains("circlek")) {
                             logoRes = R.drawable.ic_circlek;
-                            coverRes = R.drawable.cheese_burger;
                         }
 
-                        Restaurant r = new Restaurant(model.name, logoRes, coverRes, model.address, model.open_hours);
+                        Restaurant r = new Restaurant(model.id, model.name, logoRes, coverRes, model.address, model.open_hours);
 
                         ApiConfig.getFoodsApi(model.id, new ApiConfig.ApiCallback<List<ApiConfig.FoodModel>>() {
                             @Override
                             public void onSuccess(List<ApiConfig.FoodModel> foodModels) {
+                                if (!isAdded() || getView() == null) return;
                                 ArrayList<Food> menu = new ArrayList<>();
+                                if (foodModels == null) return;
                                 for (ApiConfig.FoodModel fm : foodModels) {
                                     int img = R.drawable.dish;
-                                    String fname = fm.name.toLowerCase();
-                                    if (fname.contains("hot dog")) img = R.drawable.hotdog;
+                                    String fname = fm.name != null ? fm.name.toLowerCase() : "";
+                                    if (fname.contains("hot dog") || fname.contains("hotdog")) img = R.drawable.hotdog;
                                     else if (fname.contains("cheese burger") || fname.contains("special burger")) img = R.drawable.cheese_burger;
+                                    else if (fname.contains("shrimp")) img = R.drawable.shrimp_burger;
                                     else if (fname.contains("burger")) img = R.drawable.burger;
                                     else if (fname.contains("noodles") || fname.contains("mì")) img = R.drawable.mixed_noodle;
-                                    else if (fname.contains("drink") || fname.contains("soft")) img = R.drawable.boba;
+                                    else if (fname.contains("boba") || fname.contains("trà sữa")) img = R.drawable.boba;
+                                    else if (fname.contains("drink") || fname.contains("soft")) img = R.drawable.ic_milk_tea;
                                     else if (fname.contains("coffee") || fname.contains("cà phê")) img = R.drawable.milk_coffee;
                                     else if (fname.contains("black coffee")) img = R.drawable.ic_black_coffee;
                                     else if (fname.contains("matcha")) img = R.drawable.matcha_latte;
@@ -108,7 +99,6 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.On
                                     else if (fname.contains("cake") || fname.contains("mousse")) img = R.drawable.lemon_mousse;
                                     else if (fname.contains("takoyaki")) img = R.drawable.takoyaki;
                                     else if (fname.contains("tokbokki")) img = R.drawable.tokbokki;
-                                    else if (fname.contains("shrimp")) img = R.drawable.shrimp_burger;
                                     else if (fname.contains("sandwich")) img = R.drawable.sandwich;
                                     else if (fname.contains("spaghetti")) img = R.drawable.spaghetti;
                                     else if (fname.contains("tacos")) img = R.drawable.tacos;
@@ -133,12 +123,22 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.On
                     }
                     restaurantList.clear();
                     restaurantList.addAll(fullRestaurantList);
+                    if (restaurantList.isEmpty()) {
+                        if (tvEmptyRestaurants != null) tvEmptyRestaurants.setVisibility(View.VISIBLE);
+                        if (rvRestaurant != null) rvRestaurant.setVisibility(View.GONE);
+                    } else {
+                        if (tvEmptyRestaurants != null) tvEmptyRestaurants.setVisibility(View.GONE);
+                        if (rvRestaurant != null) rvRestaurant.setVisibility(View.VISIBLE);
+                    }
                     adapter.notifyDataSetChanged();
                 }
             }
 
             @Override
             public void onError(String errorMessage) {
+                if (!isAdded() || getView() == null) return;
+                if (tvEmptyRestaurants != null) tvEmptyRestaurants.setVisibility(View.VISIBLE);
+                if (rvRestaurant != null) rvRestaurant.setVisibility(View.GONE);
             }
         });
     }

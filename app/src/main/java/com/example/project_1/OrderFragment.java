@@ -82,7 +82,8 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
                 Toast.makeText(getContext(), "Giỏ hàng của bạn đang trống!", Toast.LENGTH_SHORT).show();
             } else {
                 UserSession session = new UserSession(requireContext());
-                int customerId = session.isLoggedIn() ? session.getUserDetails().getId() : 1;
+                User user = session.getUserDetails();
+                int customerId = user != null ? user.getId() : 1;
                 if (customerId == 0) customerId = 1;
 
                 int restaurantId = CartManager.getInstance().getRestaurantId();
@@ -104,14 +105,18 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
                     public void onSuccess(Integer orderId) {
                         isDriverFoundThisSession = false;
                         CartManager.getInstance().setHasActiveOrder(true);
-                        Toast.makeText(getContext(), "Đặt đơn hàng #" + orderId + " thành công! Đang tìm tài xế...", Toast.LENGTH_SHORT).show();
+                        CartManager.getInstance().clear();
+                        Toast.makeText(getContext(), "Order #" + orderId + " placed successfully!", Toast.LENGTH_SHORT).show();
+                        if (getActivity() instanceof MainActivity) {
+                            ((MainActivity) getActivity()).updateCartBadge();
+                            ((MainActivity) getActivity()).selectTab(2);
+                        }
                         updateUI();
-                        startDriverSearchSimulation();
                     }
 
                     @Override
                     public void onError(String errorMessage) {
-                        Toast.makeText(getContext(), "Đặt hàng thất bại, vui lòng thử lại!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Order placement failed, please try again!", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -123,6 +128,9 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
             CartManager.getInstance().clear();
             isDriverFoundThisSession = false;
             Toast.makeText(getContext(), "Đã hủy đơn hàng thành công.", Toast.LENGTH_SHORT).show();
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).updateCartBadge();
+            }
             updateUI();
         });
 
@@ -219,6 +227,9 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
     public void onPlusClick(Food food, int position) {
         food.quantity++;
         CartManager.getInstance().addFood(food);
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).updateCartBadge();
+        }
         updateUI();
     }
 
@@ -227,6 +238,9 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
         if (food.quantity > 0) {
             food.quantity--;
             CartManager.getInstance().addFood(food);
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).updateCartBadge();
+            }
             updateUI();
         }
     }
