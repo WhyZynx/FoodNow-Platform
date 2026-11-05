@@ -203,10 +203,11 @@
                     app:tint="#E53935" />
 
                 <TextView
+                    android:id="@+id/tvTrackingAddress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="Trung tam Tin hoc DH Khoa hoc Tu nhien"
+                    android:text="123 Main Street, District 1, City"
                     android:textColor="@color/colorTextPrimary"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -230,6 +231,7 @@
                         app:tint="@color/colorTextSecondary" />
 
                     <TextView
+                        android:id="@+id/tvTrackingPayment"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="12dp"
@@ -296,6 +298,7 @@
                     android:paddingStart="16dp">
 
                     <TextView
+                        android:id="@+id/tvDriverName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Nguyen Van A"
@@ -304,6 +307,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvDriverLicense"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"

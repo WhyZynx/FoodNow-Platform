@@ -626,7 +626,15 @@ def get_order_detail(order_id: int):
 def get_customer_orders(customer_id: int):
     db = get_db_connection()
     with db.cursor() as cursor:
-        cursor.execute("SELECT o.*, r.name as restaurant_name FROM orders o JOIN restaurants r ON o.restaurant_id = r.id WHERE o.customer_id = %s ORDER BY o.id DESC", (customer_id,))
+        cursor.execute("""
+            SELECT o.*, r.name as restaurant_name,
+                   d.full_name as driver_name, d.phone as driver_phone
+            FROM orders o
+            JOIN restaurants r ON o.restaurant_id = r.id
+            LEFT JOIN drivers d ON o.driver_id = d.id
+            WHERE o.customer_id = %s
+            ORDER BY o.id DESC
+        """, (customer_id,))
         orders = cursor.fetchall()
         for order in orders:
             cursor.execute("""
@@ -638,6 +646,22 @@ def get_customer_orders(customer_id: int):
             order['items'] = cursor.fetchall()
     db.close()
     return {"status": "success", "orders": format_dates(orders)}
+
+@app.put("/orders/{order_id}/cancel")
+def cancel_order(order_id: int):
+    db = get_db_connection()
+    with db.cursor() as cursor:
+        cursor.execute("SELECT status FROM orders WHERE id = %s", (order_id,))
+        order = cursor.fetchone()
+        if not order:
+            db.close()
+            raise HTTPException(status_code=404, detail="Không tìm thấy đơn hàng")
+        if order['status'] not in ('pending', 'finding_driver'):
+            db.close()
+            raise HTTPException(status_code=400, detail="Đơn hàng đã được xác nhận hoặc đang giao, không thể hủy!")
+        cursor.execute("UPDATE orders SET status = 'cancelled' WHERE id = %s", (order_id,))
+    db.close()
+    return {"status": "success", "message": "Hủy đơn hàng thành công"}
 
 @app.get("/admin/login", response_class=HTMLResponse)
 def admin_login_page(request: Request):

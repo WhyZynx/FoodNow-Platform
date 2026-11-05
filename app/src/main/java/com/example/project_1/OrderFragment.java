@@ -37,8 +37,13 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
     View progressFindingDriver;
     View layoutDriverInfo;
 
+    TextView tvTrackingOrderId;
     TextView tvTrackingRestaurant;
+    TextView tvTrackingAddress;
+    TextView tvTrackingPayment;
     TextView tvTrackingTotal;
+    TextView tvDriverName;
+    TextView tvDriverLicense;
     Button btnCancelBooking;
 
     FoodAdapter foodAdapter;
@@ -72,71 +77,124 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
         progressFindingDriver = view.findViewById(R.id.progressFindingDriver);
         layoutDriverInfo = view.findViewById(R.id.layoutDriverInfo);
 
+        tvTrackingOrderId = view.findViewById(R.id.tvTrackingOrderId);
         tvTrackingRestaurant = view.findViewById(R.id.tvTrackingRestaurant);
+        tvTrackingAddress = view.findViewById(R.id.tvTrackingAddress);
+        tvTrackingPayment = view.findViewById(R.id.tvTrackingPayment);
         tvTrackingTotal = view.findViewById(R.id.tvTrackingTotal);
+        tvDriverName = view.findViewById(R.id.tvDriverName);
+        tvDriverLicense = view.findViewById(R.id.tvDriverLicense);
         btnCancelBooking = view.findViewById(R.id.btnCancelBooking);
 
-        btnPlaceOrder.setOnClickListener(v -> {
-            List<Food> cartItems = CartManager.getInstance().getCartItems();
-            if (cartItems.isEmpty()) {
-                Toast.makeText(getContext(), "Giỏ hàng của bạn đang trống!", Toast.LENGTH_SHORT).show();
-            } else {
-                UserSession session = new UserSession(requireContext());
-                User user = session.getUserDetails();
-                int customerId = user != null ? user.getId() : 1;
-                if (customerId == 0) customerId = 1;
+        btnPlaceOrder.setOnClickListener(v -> handlePlaceOrder());
+        btnCancelBooking.setOnClickListener(v -> handleCancelOrder());
 
-                int restaurantId = CartManager.getInstance().getRestaurantId();
-                if (restaurantId == 0) restaurantId = 1;
+        updateUI();
 
-                int subtotal = CartManager.getInstance().getTotalPrice();
-                int totalAmount = subtotal + 15000;
+        return view;
+    }
 
-                List<ApiConfig.OrderItemRequest> items = new ArrayList<>();
-                for (Food f : cartItems) {
-                    items.add(new ApiConfig.OrderItemRequest(f.id > 0 ? f.id : 1, f.quantity, f.price));
+    private void handlePlaceOrder() {
+        List<Food> cartItems = CartManager.getInstance().getCartItems();
+        if (cartItems.isEmpty()) {
+            Toast.makeText(getContext(), "Giỏ hàng của bạn đang trống!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        UserSession session = new UserSession(requireContext());
+        User user = session.getUserDetails();
+        int customerId = user != null ? user.getId() : 1;
+        if (customerId == 0) customerId = 1;
+
+        int restaurantId = CartManager.getInstance().getRestaurantId();
+        if (restaurantId == 0) restaurantId = 1;
+
+        String restaurantName = CartManager.getInstance().getLastRestaurantName();
+
+        int subtotal = CartManager.getInstance().getTotalPrice();
+        int totalAmount = subtotal + 15000;
+
+        List<ApiConfig.OrderItemRequest> items = new ArrayList<>();
+        for (Food f : cartItems) {
+            items.add(new ApiConfig.OrderItemRequest(f.id > 0 ? f.id : 1, f.quantity, f.price));
+        }
+
+        String address = session.isLoggedIn() && user != null && !TextUtils.isEmpty(user.getAddress())
+                ? user.getAddress() : "123 Main Street, District 1, City";
+
+        ApiConfig.createOrderApi(customerId, restaurantId, address, "Cash on Delivery", totalAmount, items, new ApiConfig.ApiCallback<Integer>() {
+            @Override
+            public void onSuccess(Integer orderId) {
+                isDriverFoundThisSession = false;
+                CartManager.getInstance().setLastOrderId(orderId);
+                CartManager.getInstance().setLastRestaurantName(restaurantName);
+                CartManager.getInstance().setLastOrderAddress(address);
+                CartManager.getInstance().setLastOrderTotal(totalAmount);
+                CartManager.getInstance().setLastPaymentMethod("Cash on Delivery");
+                CartManager.getInstance().setLastOrderStatus("pending");
+                CartManager.getInstance().setHasActiveOrder(true);
+                CartManager.getInstance().clear();
+
+                Toast.makeText(getContext(), "Order #" + orderId + " placed successfully!", Toast.LENGTH_SHORT).show();
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).updateCartBadge();
+                    ((MainActivity) getActivity()).selectTab(2);
                 }
+                updateUI();
+            }
 
-                String address = session.isLoggedIn() && !TextUtils.isEmpty(session.getUserDetails().getAddress())
-                        ? session.getUserDetails().getAddress() : "123 Main Street, District 1, City";
-
-                ApiConfig.createOrderApi(customerId, restaurantId, address, "Cash on Delivery", totalAmount, items, new ApiConfig.ApiCallback<Integer>() {
-                    @Override
-                    public void onSuccess(Integer orderId) {
-                        isDriverFoundThisSession = false;
-                        CartManager.getInstance().setHasActiveOrder(true);
-                        CartManager.getInstance().clear();
-                        Toast.makeText(getContext(), "Order #" + orderId + " placed successfully!", Toast.LENGTH_SHORT).show();
-                        if (getActivity() instanceof MainActivity) {
-                            ((MainActivity) getActivity()).updateCartBadge();
-                            ((MainActivity) getActivity()).selectTab(2);
-                        }
-                        updateUI();
-                    }
-
-                    @Override
-                    public void onError(String errorMessage) {
-                        Toast.makeText(getContext(), "Order placement failed, please try again!", Toast.LENGTH_SHORT).show();
-                    }
-                });
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(getContext(), "Order placement failed: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
+    }
 
-        btnCancelBooking.setOnClickListener(v -> {
+    private void handleCancelOrder() {
+        int orderId = CartManager.getInstance().getLastOrderId();
+        String currentStatus = CartManager.getInstance().getLastOrderStatus();
+
+        if (orderId <= 0) {
             cancelDriverSearchSimulation();
             CartManager.getInstance().setHasActiveOrder(false);
             CartManager.getInstance().clear();
-            isDriverFoundThisSession = false;
             Toast.makeText(getContext(), "Đã hủy đơn hàng thành công.", Toast.LENGTH_SHORT).show();
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).updateCartBadge();
             }
             updateUI();
+            return;
+        }
+
+        if ("confirmed".equalsIgnoreCase(currentStatus)
+                || "preparing".equalsIgnoreCase(currentStatus)
+                || "delivering".equalsIgnoreCase(currentStatus)
+                || "completed".equalsIgnoreCase(currentStatus)) {
+            Toast.makeText(getContext(), "Đơn hàng đã được xác nhận/đang giao, không thể hủy!", Toast.LENGTH_LONG).show();
+            btnCancelBooking.setVisibility(View.GONE);
+            return;
+        }
+
+        ApiConfig.cancelOrderApi(orderId, new ApiConfig.ApiCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+                cancelDriverSearchSimulation();
+                CartManager.getInstance().setHasActiveOrder(false);
+                CartManager.getInstance().clear();
+                isDriverFoundThisSession = false;
+                Toast.makeText(getContext(), "Đã hủy đơn hàng #" + orderId + " thành công.", Toast.LENGTH_SHORT).show();
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).updateCartBadge();
+                }
+                updateUI();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                fetchLatestOrderAndSync();
+            }
         });
-
-        updateUI();
-
-        return view;
     }
 
     private void startDriverSearchSimulation() {
@@ -161,28 +219,113 @@ public class OrderFragment extends Fragment implements FoodAdapter.OnFoodItemCli
         }
     }
 
+    private void fetchLatestOrderAndSync() {
+        UserSession session = new UserSession(requireContext());
+        User user = session.getUserDetails();
+        if (user == null) return;
+
+        ApiConfig.getCustomerOrdersApi(user.getId(), new ApiConfig.ApiCallback<List<ApiConfig.CustomerOrderModel>>() {
+            @Override
+            public void onSuccess(List<ApiConfig.CustomerOrderModel> orders) {
+                if (!isAdded() || orders == null || orders.isEmpty()) return;
+
+                ApiConfig.CustomerOrderModel latestOrder = orders.get(0);
+
+                if ("cancelled".equalsIgnoreCase(latestOrder.status) || "completed".equalsIgnoreCase(latestOrder.status)) {
+                    CartManager.getInstance().setHasActiveOrder(false);
+                    updateUI();
+                    return;
+                }
+
+                CartManager.getInstance().setLastOrderId(latestOrder.id);
+                CartManager.getInstance().setLastRestaurantName(latestOrder.restaurant_name);
+                CartManager.getInstance().setLastOrderAddress(latestOrder.delivery_address);
+                CartManager.getInstance().setLastPaymentMethod(latestOrder.payment_method);
+                CartManager.getInstance().setLastOrderTotal((int) latestOrder.total_amount);
+                CartManager.getInstance().setLastOrderStatus(latestOrder.status);
+                if (!TextUtils.isEmpty(latestOrder.driver_name)) {
+                    CartManager.getInstance().setLastDriverName(latestOrder.driver_name);
+                }
+                if (!TextUtils.isEmpty(latestOrder.driver_phone)) {
+                    CartManager.getInstance().setLastDriverPhone(latestOrder.driver_phone);
+                }
+
+                displayActiveOrderData();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+            }
+        });
+    }
+
+    private void displayActiveOrderData() {
+        if (!isAdded()) return;
+
+        int orderId = CartManager.getInstance().getLastOrderId();
+        String restaurantName = CartManager.getInstance().getLastRestaurantName();
+        String address = CartManager.getInstance().getLastOrderAddress();
+        String payment = CartManager.getInstance().getLastPaymentMethod();
+        int total = CartManager.getInstance().getLastOrderTotal();
+        String status = CartManager.getInstance().getLastOrderStatus();
+        String driverName = CartManager.getInstance().getLastDriverName();
+        String driverPhone = CartManager.getInstance().getLastDriverPhone();
+
+        if (tvTrackingOrderId != null) {
+            tvTrackingOrderId.setText(orderId > 0 ? String.format(Locale.US, "Order ID: #%d", orderId) : "Order ID: Pending");
+        }
+        if (tvTrackingRestaurant != null) {
+            tvTrackingRestaurant.setText(restaurantName != null ? restaurantName : "Restaurant");
+        }
+        if (tvTrackingAddress != null) {
+            tvTrackingAddress.setText(address != null ? address : "Delivery Address");
+        }
+        if (tvTrackingPayment != null) {
+            tvTrackingPayment.setText(payment != null ? payment : "Cash on Delivery");
+        }
+        if (tvTrackingTotal != null) {
+            tvTrackingTotal.setText(String.format(Locale.US, "%,d VND", total));
+        }
+
+        if (tvDriverName != null && !TextUtils.isEmpty(driverName)) {
+            tvDriverName.setText(driverName);
+        }
+        if (tvDriverLicense != null && !TextUtils.isEmpty(driverPhone)) {
+            tvDriverLicense.setText(driverPhone);
+        }
+
+        boolean isConfirmedOrDelivering = "confirmed".equalsIgnoreCase(status)
+                || "preparing".equalsIgnoreCase(status)
+                || "delivering".equalsIgnoreCase(status)
+                || "completed".equalsIgnoreCase(status)
+                || isDriverFoundThisSession;
+
+        if (isConfirmedOrDelivering) {
+            tvDriverStatus.setText("Đã tìm thấy tài xế!");
+            tvDriverSubStatus.setText("Driver found! Your food is on the way.");
+            progressFindingDriver.setVisibility(View.GONE);
+            layoutDriverInfo.setVisibility(View.VISIBLE);
+            btnCancelBooking.setVisibility(View.GONE);
+        } else {
+            tvDriverStatus.setText("Đang tìm tài xế...");
+            tvDriverSubStatus.setText("Finding driver for your order...");
+            progressFindingDriver.setVisibility(View.VISIBLE);
+            layoutDriverInfo.setVisibility(View.GONE);
+            btnCancelBooking.setVisibility(View.VISIBLE);
+            btnCancelBooking.setEnabled(true);
+            if (driverMatchRunnable == null) {
+                startDriverSearchSimulation();
+            }
+        }
+    }
+
     private void updateUI() {
         if (CartManager.getInstance().hasActiveOrder()) {
             layoutCartView.setVisibility(View.GONE);
             layoutTrackingView.setVisibility(View.VISIBLE);
 
-            tvTrackingRestaurant.setText(CartManager.getInstance().getLastRestaurantName());
-            tvTrackingTotal.setText(String.format(Locale.US, "%,d VND", CartManager.getInstance().getTotalPrice()));
-
-            if (isDriverFoundThisSession) {
-                tvDriverStatus.setText("Đã tìm thấy tài xế!");
-                tvDriverSubStatus.setText("Driver found! Your food is on the way.");
-                progressFindingDriver.setVisibility(View.GONE);
-                layoutDriverInfo.setVisibility(View.VISIBLE);
-            } else {
-                tvDriverStatus.setText("Đang tìm tài xế...");
-                tvDriverSubStatus.setText("Finding driver for your order...");
-                progressFindingDriver.setVisibility(View.VISIBLE);
-                layoutDriverInfo.setVisibility(View.GONE);
-                if (driverMatchRunnable == null) {
-                    startDriverSearchSimulation();
-                }
-            }
+            displayActiveOrderData();
+            fetchLatestOrderAndSync();
         } else {
             layoutCartView.setVisibility(View.VISIBLE);
             layoutTrackingView.setVisibility(View.GONE);

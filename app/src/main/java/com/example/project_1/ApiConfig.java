@@ -28,7 +28,7 @@ public class ApiConfig {
     // - Emulator testing: "http://10.0.2.2:8000/"
     // - Real Phone testing: "http://<YOUR_COMPUTER_IP>:8000/" (e.g. "http://192.168.1.100:8000/")
     // =========================================================================
-    public static String BASE_URL = "http://192.168.115.158:8000/";
+    public static String BASE_URL = "http://10.0.2.2:8000/";
 
     private static Retrofit retrofit = null;
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
@@ -90,6 +90,9 @@ public class ApiConfig {
 
         @GET("orders/customer/{customer_id}")
         Call<CustomerOrdersResponse> getCustomerOrders(@Path("customer_id") int customerId);
+
+        @PUT("orders/{order_id}/cancel")
+        Call<ApiResponse<Void>> cancelOrder(@Path("order_id") int orderId);
     }
 
     public static class ApiResponse<T> {
@@ -112,6 +115,8 @@ public class ApiConfig {
         public double total_amount;
         public String status;
         public String created_at;
+        public String driver_name;
+        public String driver_phone;
         public List<OrderItemModel> items;
     }
 
@@ -446,6 +451,23 @@ public class ApiConfig {
                     mainHandler.post(() -> callback.onSuccess(list != null ? list : new ArrayList<>()));
                 } else {
                     String err = parseErrorMessage(response, "Failed to fetch order history");
+                    mainHandler.post(() -> callback.onError(err));
+                }
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(parseNetworkError(e)));
+            }
+        });
+    }
+
+    public static void cancelOrderApi(int orderId, ApiCallback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                Call<ApiResponse<Void>> call = getApiService().cancelOrder(orderId);
+                Response<ApiResponse<Void>> response = call.execute();
+                if (response.isSuccessful() && response.body() != null && "success".equals(response.body().status)) {
+                    mainHandler.post(() -> callback.onSuccess(true));
+                } else {
+                    String err = parseErrorMessage(response, "Cannot cancel order");
                     mainHandler.post(() -> callback.onError(err));
                 }
             } catch (Exception e) {

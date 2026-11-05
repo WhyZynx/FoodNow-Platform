@@ -8,7 +8,14 @@ public class CartManager {
     private List<Food> cartItems;
     private boolean hasActiveOrder = false;
     private int restaurantId = 1;
+    private int lastOrderId = 0;
     private String lastRestaurantName = "Restaurant";
+    private String lastOrderAddress = "123 Main Street";
+    private String lastPaymentMethod = "Cash";
+    private int lastOrderTotal = 0;
+    private String lastOrderStatus = "pending";
+    private String lastDriverName = "";
+    private String lastDriverPhone = "";
 
     private CartManager() {
         cartItems = new ArrayList<>();
@@ -37,12 +44,68 @@ public class CartManager {
         this.restaurantId = restaurantId;
     }
 
+    public int getLastOrderId() {
+        return lastOrderId;
+    }
+
+    public void setLastOrderId(int lastOrderId) {
+        this.lastOrderId = lastOrderId;
+    }
+
     public String getLastRestaurantName() {
         return lastRestaurantName;
     }
 
     public void setLastRestaurantName(String lastRestaurantName) {
         this.lastRestaurantName = lastRestaurantName;
+    }
+
+    public String getLastOrderAddress() {
+        return lastOrderAddress;
+    }
+
+    public void setLastOrderAddress(String lastOrderAddress) {
+        this.lastOrderAddress = lastOrderAddress;
+    }
+
+    public String getLastPaymentMethod() {
+        return lastPaymentMethod;
+    }
+
+    public void setLastPaymentMethod(String lastPaymentMethod) {
+        this.lastPaymentMethod = lastPaymentMethod;
+    }
+
+    public int getLastOrderTotal() {
+        return lastOrderTotal;
+    }
+
+    public void setLastOrderTotal(int lastOrderTotal) {
+        this.lastOrderTotal = lastOrderTotal;
+    }
+
+    public String getLastOrderStatus() {
+        return lastOrderStatus;
+    }
+
+    public void setLastOrderStatus(String lastOrderStatus) {
+        this.lastOrderStatus = lastOrderStatus;
+    }
+
+    public String getLastDriverName() {
+        return lastDriverName;
+    }
+
+    public void setLastDriverName(String lastDriverName) {
+        this.lastDriverName = lastDriverName;
+    }
+
+    public String getLastDriverPhone() {
+        return lastDriverPhone;
+    }
+
+    public void setLastDriverPhone(String lastDriverPhone) {
+        this.lastDriverPhone = lastDriverPhone;
     }
 
     public List<Food> getCartItems() {
